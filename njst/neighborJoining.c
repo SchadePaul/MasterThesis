@@ -106,6 +106,9 @@ void removeRoot(struct node **root, double dist) {
 }
 
 void makeTreeFromDistanceMatrix(double **distance, int size, struct node **root, char **names) {
+    if (size == 0) {
+        return;
+    }
     char name = 'u';
     (*root)->firstChild = (struct node *) calloc(sizeof(struct node), 1);
     struct node *current = (*root)->firstChild;
@@ -138,7 +141,11 @@ void makeTreeFromDistanceMatrix(double **distance, int size, struct node **root,
         distance = newDistance;
         newDistance = tmp;
     }
-    removeRoot(root, distance[0][1]);
+    
+    if (size > 2) {
+        removeRoot(root, distance[0][1]);
+    }
+    
     for (int i = 0; i < size; i++) {
         free(currentDistance[i]);
         free(distance[i]);

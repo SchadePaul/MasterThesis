@@ -49,7 +49,7 @@ void readFileToArray(const char *filename, char ***newickTree, int *numberOfTree
     }
     
     char c;
-    *numberOfTrees = 1;
+    *numberOfTrees = 0;
     int indexTree = 0;
     int posInLine = 0;
     
