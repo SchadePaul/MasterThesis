@@ -7,7 +7,6 @@
 
 const int lineWidthIntervall = 50;
 const char endOfTree = ';';
-const char placeholderName = '*';
 
 int compNumberOfTerminalNodes(struct node *current) {
     int num = 0;
@@ -55,20 +54,29 @@ void readFileToArray(const char *filename, char ***newickTree, int *numberOfTree
     
     // Set char array for first tree;
     *newickTree = (char **) calloc(sizeof(char *), 1);
-    
+    int ignore = 0;
     // Read whole file
     while (fread(&c, sizeof(c), 1, f) == 1) {
         if (c == '\n') {
             continue;
         }
         if (c != endOfTree) {
-            if (posInLine % lineWidthIntervall == 0) {
-                int fromSize = posInLine;
-                int toSize = fromSize + lineWidthIntervall;
-                extenCharSize(&(*newickTree)[indexTree], fromSize, toSize);
+            if (c == '[') {
+                ignore = 1;
+            } else if (c == ']') {
+                ignore = 0;
+                continue;
             }
-            (*newickTree)[indexTree][posInLine] = c;
-            posInLine++;
+            if (ignore == 0) {
+                if (posInLine % lineWidthIntervall == 0) {
+                    int fromSize = posInLine;
+                    int toSize = fromSize + lineWidthIntervall;
+                    extenCharSize(&(*newickTree)[indexTree], fromSize, toSize);
+                }
+                (*newickTree)[indexTree][posInLine] = c;
+                posInLine++;
+            }
+            
         } else {
             indexTree++;
             extendCharArraybyTree(newickTree, indexTree + 1);
@@ -123,19 +131,15 @@ void newickTreeToTree(char *newickTree, struct node **tree, char ***allNames, in
     int posInNewickTree = 0;
     int posInCurrentName = 0;
     int posInCurrentValue = 0;
+    int readingValue = 0;
     (*tree) = (struct node *) calloc(sizeof(struct node), 1);
     struct node *current = (*tree);
     char *value = calloc(sizeof(char), maxValueLength);
-    
+    int dontAddNextName = 0;
     while (newickTree[posInNewickTree] != 0) {
         char c = newickTree[posInNewickTree];
-        if (isChar(c)) {
-            current->name[posInCurrentName] = c;
-            posInCurrentName++;
-        } else if (isValue(c)) {
-            value[posInCurrentValue] = c;
-            posInCurrentValue++;
-        } else if (isTreeOperator(c)) {
+        if (isTreeOperator(c)) {
+            readingValue = 0;
             if (posInCurrentValue > 0) {
                 value[posInCurrentValue] = 0;
                 current->distToParent = atof(value);
@@ -143,10 +147,15 @@ void newickTreeToTree(char *newickTree, struct node **tree, char ***allNames, in
             }
             if (posInCurrentName > 0) {
                 posInCurrentName = 0;
-                addName(current->name, allNames, numberOfNames);
+                if (dontAddNextName == 0) {
+                    addName(current->name, allNames, numberOfNames);
+                } else {
+                    dontAddNextName = 0;
+                }
             }
             if (current->name[0] == 0) {
                 current->name[0] = placeholderName;
+                dontAddNextName = 0;
             }
             if (c == '(') {
                 current->firstChild = (struct node*) calloc(sizeof(struct node), 1);
@@ -156,9 +165,19 @@ void newickTreeToTree(char *newickTree, struct node **tree, char ***allNames, in
                 current->nextSibling = (struct node*) calloc(sizeof(struct node), 1);
                 current->nextSibling->parent = current->parent;
                 current = current->nextSibling;
+                dontAddNextName = 0;
             } else if (c == ')') {
                 current = current->parent;
+                dontAddNextName = 1;
+            } else if (c == ':') {
+                readingValue = 1;
             }
+        } else if (readingValue == 1) {
+            value[posInCurrentValue] = c;
+            posInCurrentValue++;
+        } else {
+            current->name[posInCurrentName] = c;
+            posInCurrentName++;
         }
         posInNewickTree++;
     }

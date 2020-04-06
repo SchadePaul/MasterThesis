@@ -3,6 +3,7 @@
 
 int static const maxNameLength = 5;
 int static const maxValueLength = 50;
+char static const placeholderName = '*';
 
 struct node {
     char name[maxNameLength];

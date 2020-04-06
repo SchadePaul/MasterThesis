@@ -109,7 +109,7 @@ void makeTreeFromDistanceMatrix(double **distance, int size, struct node **root,
     if (size == 0) {
         return;
     }
-    char name = 'u';
+    char name = placeholderName;
     (*root)->firstChild = (struct node *) calloc(sizeof(struct node), 1);
     struct node *current = (*root)->firstChild;
     double **currentDistance = (double**) calloc(sizeof(double*), size);
@@ -134,7 +134,6 @@ void makeTreeFromDistanceMatrix(double **distance, int size, struct node **root,
         calcQ(q, distance, currentSize);
         findMinOfQ(q, currentSize, i ,j);
         join(*i, *j, *root, currentSize, name, distance);
-        name++;
         currentSize--;
         calcD(distance, newDistance,currentSize,*i,*j);
         double **tmp = distance;
