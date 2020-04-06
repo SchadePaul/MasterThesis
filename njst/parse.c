@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "node.h"
+#include <errno.h>
 
 const int lineWidthIntervall = 50;
 const char endOfTree = ';';
@@ -42,6 +43,11 @@ void extenCharSize(char **oldChar, int fromSize, int toSize) {
 
 void readFileToArray(const char *filename, char ***newickTree, int *numberOfTrees) {
     FILE *f = fopen(filename, "rb");
+    if (!f) {
+        fprintf(stderr, "Error opening file: %s\n", strerror(errno));
+        return;
+    }
+    
     char c;
     *numberOfTrees = 1;
     int indexTree = 0;
@@ -220,10 +226,15 @@ void printTree(struct node *tree) {
 }
 
 void saveTree(struct node *tree, const char *name) {
-    FILE *f;
+    FILE *f = fopen(name, "w");
+    
+    if (!f) {
+        fprintf(stderr, "Error saving file: %s\n", strerror(errno));
+        return;
+    }
     char *rootname = (char *) calloc(sizeof(char), maxNameLength);
     strcpy(rootname, tree->name);
-    f = fopen(name, "w");
+    
     int index = 0;
     struct node *current = tree;
     int size = compNumberOfTerminalNodes(current);

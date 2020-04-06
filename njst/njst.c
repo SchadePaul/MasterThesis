@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 void averageDistances(double ***allDistances, double **distance, int numberOfNames, int numberOfTrees) {
     for (int i = 0; i < numberOfNames; i++) {
@@ -31,6 +32,11 @@ void njstFromFile(struct node **root, const char *filename) {
     char **newickTree;
     int numberOfTrees;
     readFileToArray(filename, &newickTree, &numberOfTrees);
+    
+    if (errno != 0) {
+        return;
+    }
+    
     
     // array of chars to trees
     char **allNames;
@@ -111,5 +117,4 @@ void njstFromFile(struct node **root, const char *filename) {
     }
     free(distance);
     free(allNames);
-    
 }
