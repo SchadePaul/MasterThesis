@@ -39,23 +39,29 @@ void njstFromFile(struct node **root, const char *filename) {
     
     
     // array of chars to trees
-    char **allNames;
-    int numberOfNames;
+    char **allLeafNames;
+    int numberOfLeafNames;
     struct node **tree = (struct node **) calloc(sizeof(struct node *), numberOfTrees);
     for (int i = 0; i < numberOfTrees; i++) {
-        newickTreeToTree(newickTree[i], &tree[i], &allNames, &numberOfNames);
+        // parse newick format to tree, add leaf names to allLeafNamesArray
+        newickTreeToTree(newickTree[i], &tree[i], &allLeafNames, &numberOfLeafNames);
         free(newickTree[i]);
     }
     free(newickTree);
-    double ***allDistances = (double ***) calloc(sizeof(double **), numberOfNames);
-    for (int i = 0; i < numberOfNames; i++) {
-        allDistances[i] = (double **) calloc(sizeof(double *), numberOfNames);
-        for (int j = 0; j < numberOfNames; j++) {
-            allDistances[i][j] = (double *) calloc(sizeof(double), numberOfTrees);
+    
+    // allocate space for allLeafDistances array
+    double ***allLeafDistances = (double ***) calloc(sizeof(double **), numberOfLeafNames);
+    for (int i = 0; i < numberOfLeafNames; i++) {
+        allLeafDistances[i] = (double **) calloc(sizeof(double *), numberOfLeafNames);
+        for (int j = 0; j < numberOfLeafNames; j++) {
+            allLeafDistances[i][j] = (double *) calloc(sizeof(double), numberOfTrees);
         }
     }
+    
+    // for all trees copmute distances between leaf nodes
     for (int i = 0; i < numberOfTrees; i++) {
-        int size = tree[i]->numberOfTerminalNodes;
+        // get number of leafs
+        int size = tree[i]->numberOfLeaves;
         double **dist = (double **) calloc(sizeof(double*), size);
         for (int j = 0; j < size; j++) {
             dist[j] = (double *) calloc(sizeof(double), size);
@@ -64,21 +70,25 @@ void njstFromFile(struct node **root, const char *filename) {
         for (int j = 0; j < size; j++) {
             name[j] = (char *) calloc(sizeof(char), maxNameLength);
         }
-        allToAllDistance(tree[i], dist, size, name);
+        
+        // compute leaf to leaf distance for all leafs
+        leafToLeafDistance(tree[i], dist, size, name);
         freeTree(tree[i]);
+        
+        // copy distances to allLeafDistances array
         for (int j = 0; j < size; j++) {
             for (int k = 0; k < size; k++) {
                 int ii;
                 int jj;
-                for (int l = 0; l < numberOfNames; l++) {
-                    if (strcmp(name[j], allNames[l]) == 0) {
+                for (int l = 0; l < numberOfLeafNames; l++) {
+                    if (strcmp(name[j], allLeafNames[l]) == 0) {
                         ii = l;
                     }
-                    if (strcmp(name[k], allNames[l]) == 0) {
+                    if (strcmp(name[k], allLeafNames[l]) == 0) {
                         jj = l;
                     }
                 }
-                allDistances[ii][jj][i] = dist[j][k];
+                allLeafDistances[ii][jj][i] = dist[j][k];
             }
         }
         
@@ -92,29 +102,31 @@ void njstFromFile(struct node **root, const char *filename) {
     
     free(tree);
     
-    double **distance = (double **) calloc(sizeof(double*), numberOfNames);
-    for (int i = 0; i < numberOfNames; i++) {
-        distance[i] = (double *) calloc(sizeof(double), numberOfNames);
+    double **distance = (double **) calloc(sizeof(double*), numberOfLeafNames);
+    for (int i = 0; i < numberOfLeafNames; i++) {
+        distance[i] = (double *) calloc(sizeof(double), numberOfLeafNames);
     }
     
-    averageDistances(allDistances, distance, numberOfNames, numberOfTrees);
+    // Average over all trees
+    averageDistances(allLeafDistances, distance, numberOfLeafNames, numberOfTrees);
     
     // Free allocate space allDistances
-    for (int i = 0; i < numberOfNames; i++) {
-        for (int j = 0; j < numberOfNames; j++) {
-            free(allDistances[i][j]);
+    for (int i = 0; i < numberOfLeafNames; i++) {
+        for (int j = 0; j < numberOfLeafNames; j++) {
+            free(allLeafDistances[i][j]);
         }
-        free(allDistances[i]);
+        free(allLeafDistances[i]);
     }
-    free(allDistances);
+    free(allLeafDistances);
     
-    makeTreeFromDistanceMatrix(distance, numberOfNames, root, allNames);
+    // copmute species tree from distance array
+    makeTreeFromDistanceArray(distance, numberOfLeafNames, root, allLeafNames);
     
     // Free allocate space numberOfNames, distance
-    for (int i = 0; i < numberOfNames; i++) {
-        free(allNames[i]);
+    for (int i = 0; i < numberOfLeafNames; i++) {
+        free(allLeafNames[i]);
         free(distance[i]);
     }
     free(distance);
-    free(allNames);
+    free(allLeafNames);
 }

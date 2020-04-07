@@ -9,18 +9,26 @@ void freeTree(struct node *tree) {
     int didDelete = 1;
     int direction = 0;
     while (before != NULL) {
+        
+        // go depth first
         while (current->firstChild != NULL) {
             direction = 1;
             before = current;
             current = current->firstChild;
         }
-        while (current->nextSibling != NULL) {
+        
+        // go to next sibling and restart while loop
+        if (current->nextSibling != NULL) {
             direction = 2;
             before = current;
             current = current->nextSibling;
             continue;
         }
+        
+        // free current node
         free(current);
+        
+        // delete pointer to node
         if (direction == 1) {
             before->firstChild = NULL;
         } else if (direction == 2) {
@@ -28,6 +36,8 @@ void freeTree(struct node *tree) {
         } else {
             before = NULL;
         }
+        
+        // restart from the top
         current = tree;
         direction = 0;
     }
@@ -35,12 +45,12 @@ void freeTree(struct node *tree) {
 
 void editDistanceForUp(int index, struct node *current, double **dist, int size) {
     // Edit distances for going up
-    for (int i = 0; i < index - current->numberOfTerminalNodes + 1; i++) {
+    for (int i = 0; i < index - current->numberOfLeaves + 1; i++) {
         for (int j = index + 1; j < size; j++) {
             dist[i][j] -= current->distToParent;
         }
     }
-    for (int i = index - current->numberOfTerminalNodes + 1; i <= index; i++) {
+    for (int i = index - current->numberOfLeaves + 1; i <= index; i++) {
         for (int j = index + 1; j < size; j++) {
             dist[i][j] += current->distToParent;
         }
@@ -58,7 +68,7 @@ void editDistanceForDown(int index, struct node *current, double **dist, int siz
 
 
 // TODO: Last node might be not done right, only works if no internal nodes appear
-void allToAllDistance(struct node *root, double **dist, int size, char **name) {
+void leafToLeafDistance(struct node *root, double **dist, int size, char **name) {
     struct node *current = root;
     int index = 0;
     // Iterate through all terminal nodes ahead

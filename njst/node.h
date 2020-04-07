@@ -7,7 +7,7 @@ char static const placeholderName = '*';
 
 struct node {
     char name[maxNameLength];
-    int numberOfTerminalNodes;
+    int numberOfLeaves;
     double distToParent;
     struct node *parent;
     struct node *firstChild;

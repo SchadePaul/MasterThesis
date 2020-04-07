@@ -8,16 +8,16 @@
 const int lineWidthIntervall = 50;
 const char endOfTree = ';';
 
-int compNumberOfTerminalNodes(struct node *current) {
+int compNumberOfLeaves(struct node *current) {
     int num = 0;
     if (current->firstChild != NULL) {
-        num = compNumberOfTerminalNodes(current->firstChild);
+        num = compNumberOfLeaves(current->firstChild);
     } else {
         num = 1;
     }
-    current->numberOfTerminalNodes = num;
+    current->numberOfLeaves = num;
     if (current->nextSibling != NULL) {
-        num += compNumberOfTerminalNodes(current->nextSibling);
+        num += compNumberOfLeaves(current->nextSibling);
     }
     return num;
 }
@@ -32,6 +32,7 @@ void extendCharArraybyTree(char ***newickTree, int newNumberOfTrees) {
 }
 
 void extenCharSize(char **oldChar, int fromSize, int toSize) {
+    // extend to size + 1 (to have a terminal 0)
     char *newChar = calloc(sizeof(char), toSize + 1);
     for (int i = 0; i < fromSize; i++) {
         newChar[i] = (*oldChar)[i];
@@ -57,22 +58,28 @@ void readFileToArray(const char *filename, char ***newickTree, int *numberOfTree
     int ignore = 0;
     // Read whole file
     while (fread(&c, sizeof(c), 1, f) == 1) {
+        
+        // Ignore newline char
         if (c == '\n') {
             continue;
         }
+        // Ignore comments in []-brackets
+        if (c == '[') {
+            ignore = 1;
+        } else if (c == ']') {
+            ignore = 0;
+            continue;
+        }
+        
         if (c != endOfTree) {
-            if (c == '[') {
-                ignore = 1;
-            } else if (c == ']') {
-                ignore = 0;
-                continue;
-            }
             if (ignore == 0) {
                 if (posInLine % lineWidthIntervall == 0) {
                     int fromSize = posInLine;
                     int toSize = fromSize + lineWidthIntervall;
                     extenCharSize(&(*newickTree)[indexTree], fromSize, toSize);
                 }
+                
+                // Add char to array
                 (*newickTree)[indexTree][posInLine] = c;
                 posInLine++;
             }
@@ -126,7 +133,7 @@ int isTreeOperator(char c) {
     return 0;
 }
 
-void newickTreeToTree(char *newickTree, struct node **tree, char ***allNames, int *numberOfNames) {
+void newickTreeToTree(char *newickTree, struct node **tree, char ***allLeafNames, int *numberOfLeafNames) {
 
     int posInNewickTree = 0;
     int posInCurrentName = 0;
@@ -135,6 +142,8 @@ void newickTreeToTree(char *newickTree, struct node **tree, char ***allNames, in
     (*tree) = (struct node *) calloc(sizeof(struct node), 1);
     struct node *current = (*tree);
     char *value = calloc(sizeof(char), maxValueLength);
+    
+    // Only add names of leaves
     int dontAddNextName = 0;
     while (newickTree[posInNewickTree] != 0) {
         char c = newickTree[posInNewickTree];
@@ -182,7 +191,7 @@ void newickTreeToTree(char *newickTree, struct node **tree, char ***allNames, in
         posInNewickTree++;
     }
     free(value);
-    compNumberOfTerminalNodes(*tree);
+    compNumberOfLeaves(*tree);
     
 }
 
@@ -210,9 +219,9 @@ void fillArray(char *array, struct node *current, int width, int offsetX, int of
         fillArray(array, current->firstChild, width, offsetX, offsetY + 2);
     }
     if (current->nextSibling != NULL) {
-        int index = (offsetY - 1) * width * maxNameLength + (offsetX + current->numberOfTerminalNodes) * maxNameLength;
+        int index = (offsetY - 1) * width * maxNameLength + (offsetX + current->numberOfLeaves) * maxNameLength;
         array[index] = '\\';
-        fillArray(array, current->nextSibling, width, offsetX + current->numberOfTerminalNodes, offsetY);
+        fillArray(array, current->nextSibling, width, offsetX + current->numberOfLeaves, offsetY);
         index--;
         while (array[index - width * maxNameLength] == 0) {
             array[index - width * maxNameLength] = '-';
@@ -227,7 +236,7 @@ void fillArray(char *array, struct node *current, int width, int offsetX, int of
 
 void printTree(struct node *tree) {
     int depth = maxDepth(tree);
-    int terminalNodes = compNumberOfTerminalNodes(tree);
+    int terminalNodes = compNumberOfLeaves(tree);
     char *array = calloc(sizeof(char), depth * terminalNodes * maxNameLength * 2 - 1);
     fillArray(array, tree, terminalNodes, 0, 0);
     for (int i = 0; i < depth * 2; i++) {
@@ -256,7 +265,7 @@ void saveTree(struct node *tree, const char *name) {
     
     int index = 0;
     struct node *current = tree;
-    int size = compNumberOfTerminalNodes(current);
+    int size = compNumberOfLeaves(current);
     while (index < size - 1) {
         while (current->firstChild != NULL) {
             current = current->firstChild;

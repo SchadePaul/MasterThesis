@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "node.h"
+#include <limits.h>
 
 void calcQ(double**q, double **distance, int size) {
     for (int i = 0; i < size; i++) {
@@ -20,8 +21,7 @@ void calcQ(double**q, double **distance, int size) {
 }
 
 void findMinOfQ(double **q, int size, int *i, int *j) {
-    //TODO find max int
-    double min = 999999;
+    double min = INT_MAX;
     for (int ii = 0; ii < size; ii++) {
         for (int jj = ii + 1; jj < size; jj++) {
             if(q[ii][jj] < min) {
@@ -105,7 +105,7 @@ void removeRoot(struct node **root, double dist) {
     (*root)->nextSibling = NULL;
 }
 
-void makeTreeFromDistanceMatrix(double **distance, int size, struct node **root, char **names) {
+void makeTreeFromDistanceArray(double **distance, int size, struct node **root, char **names) {
     if (size == 0) {
         return;
     }
