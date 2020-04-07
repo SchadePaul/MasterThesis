@@ -157,7 +157,7 @@ void newickTreeToTree(char *newickTree, struct node **tree, char ***allLeafNames
             if (posInCurrentName > 0) {
                 posInCurrentName = 0;
                 if (dontAddNextName == 0) {
-                    addName(current->name, allNames, numberOfNames);
+                    addName(current->name, allLeafNames, numberOfLeafNames);
                 } else {
                     dontAddNextName = 0;
                 }
@@ -260,41 +260,25 @@ void saveTree(struct node *tree, const char *name) {
         fprintf(stderr, "Error saving file: %s\n", strerror(errno));
         return;
     }
-    char *rootname = (char *) calloc(sizeof(char), maxNameLength);
-    strcpy(rootname, tree->name);
     
-    int index = 0;
     struct node *current = tree;
-    int size = compNumberOfLeaves(current);
-    while (index < size - 1) {
-        while (current->firstChild != NULL) {
+    int goingUp = 0;
+    while (!(current == tree && goingUp == 1)) {
+        if (current->firstChild != NULL && goingUp == 0) {
+            fprintf(f, "(");
+            goingUp = 0;
             current = current->firstChild;
-            if (current->name[0] != placeholderName) {
-                fprintf(f, "(%s:%f", current->name, current->distToParent);
-            } else {
-                fprintf(f, "(:%f", current->distToParent);
-            }
-            
-        }
-        while (current->nextSibling == NULL) {
-            current = current->parent;
-            fprintf(f, ")");
-        }
-        current = current->nextSibling;
-        if (current->name[0] != placeholderName) {
-            fprintf(f, ",%s:%f", current->name, current->distToParent);
+        } else if (current->nextSibling != NULL) {
+            fprintf(f, "%s:%f,", current->name, current->distToParent);
+            goingUp = 0;
+            current = current->nextSibling;
         } else {
-            fprintf(f, ",:%f", current->distToParent);
+            fprintf(f, "%s:%f)", current->name, current->distToParent);
+            goingUp = 1;
+            current = current->parent;
         }
-        
-        index++;
     }
-    if (rootname[0] != placeholderName) {
-        fprintf(f, ")%s;", rootname);
-    } else{
-        fprintf(f, ");");
-    }
-    free(rootname);
+    fprintf(f, "%s;", current->name);
     fclose(f);
     
 }
