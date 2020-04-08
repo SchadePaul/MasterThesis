@@ -125,8 +125,6 @@ void njstFromFile(struct node **root, const char *filename) {
     // Free allocate space numberOfNames, distance
     for (int i = 0; i < numberOfLeafNames; i++) {
         free(allLeafNames[i]);
-        free(distance[i]);
     }
-    free(distance);
     free(allLeafNames);
 }

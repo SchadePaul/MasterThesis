@@ -96,14 +96,6 @@ void calcD(double **distance, double **newDistance, int size, int i, int j) {
     }
 }
 
-void removeRoot(struct node **root, double dist) {
-    (*root)->firstChild->nextSibling->distToParent = dist;
-    (*root)->firstChild->nextSibling->parent = (*root)->firstChild;
-    (*root)->firstChild->firstChild->nextSibling->nextSibling = (*root)->firstChild->nextSibling;
-    (*root) = (*root)->firstChild;
-    (*root)->parent = NULL;
-    (*root)->nextSibling = NULL;
-}
 
 void makeTreeFromDistanceArray(double **distance, int size, struct node **root, char **names) {
     if (size == 0) {
@@ -141,9 +133,10 @@ void makeTreeFromDistanceArray(double **distance, int size, struct node **root, 
         newDistance = tmp;
     }
     
-    if (size > 2) {
-        removeRoot(root, distance[0][1]);
-    }
+    (*root)->firstChild->distToParent = distance[0][1];
+    (*root)->firstChild->parent = (*root);
+    (*root)->firstChild->nextSibling->parent = (*root);
+    (*root)->name[0] = placeholderName;
     
     for (int i = 0; i < size; i++) {
         free(currentDistance[i]);

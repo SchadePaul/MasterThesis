@@ -10,7 +10,6 @@
 #include <errno.h>
 
 int main(int argc, char **argv) {
-    
     char c;
     char *input;
     char *output;
@@ -31,7 +30,6 @@ int main(int argc, char **argv) {
     if (errno != 0) {
         return errno;
     }
-    printTree(speciestree);
     saveTree(speciestree, output);
     
     freeTree(speciestree);

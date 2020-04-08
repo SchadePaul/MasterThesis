@@ -269,16 +269,28 @@ void saveTree(struct node *tree, const char *name) {
             goingUp = 0;
             current = current->firstChild;
         } else if (current->nextSibling != NULL) {
-            fprintf(f, "%s:%f,", current->name, current->distToParent);
+            if (current->name[0] != placeholderName) {
+                fprintf(f, "%s:%f,", current->name, current->distToParent);
+            } else {
+                fprintf(f, ":%f,", current->distToParent);
+            }
             goingUp = 0;
             current = current->nextSibling;
         } else {
-            fprintf(f, "%s:%f)", current->name, current->distToParent);
+            if (current->name[0] != placeholderName) {
+                fprintf(f, "%s:%f)", current->name, current->distToParent);
+            } else {
+                fprintf(f, ":%f)", current->distToParent);
+            }
             goingUp = 1;
             current = current->parent;
         }
     }
-    fprintf(f, "%s;", current->name);
-    fclose(f);
+    if (current->name[0] != placeholderName) {
+        fprintf(f, "%s;", current->name);
+    } else {
+        fprintf(f, ";");
+    }
     
+    fclose(f);
 }
