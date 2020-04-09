@@ -47,12 +47,12 @@ void editDistanceForUp(int index, struct node *current, double **dist, int size)
     // Edit distances for going up
     for (int i = 0; i < index - current->numberOfLeaves + 1; i++) {
         for (int j = index + 1; j < size; j++) {
-            dist[i][j] -= current->distToParent;
+            dist[i][j - i] -= current->distToParent;
         }
     }
     for (int i = index - current->numberOfLeaves + 1; i <= index; i++) {
         for (int j = index + 1; j < size; j++) {
-            dist[i][j] += current->distToParent;
+            dist[i][j - i] += current->distToParent;
         }
     }
 }
@@ -60,7 +60,7 @@ void editDistanceForDown(int index, struct node *current, double **dist, int siz
     // Edit distances for going down
     for (int i = 0; i < index; i++) {
         for (int j = index; j < size; j++) {
-            dist[i][j] += current->distToParent;
+            dist[i][j - i] += current->distToParent;
         }
     }
 }
@@ -99,10 +99,4 @@ void leafToLeafDistance(struct node *root, double **dist, int size, char **name)
         editDistanceForDown(index, current, dist, size);
     }
     
-    // Fill second half of distance matrix (optional)
-    for (int i = 0; i < size; i++) {
-        for (int j = i; j < size; j++) {
-            dist[j][i] = dist[i][j];
-        }
-    }
 }

@@ -6,14 +6,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/time.h>
 
 void averageDistances(double ***allDistances, double **distance, int numberOfNames, int numberOfTrees) {
     for (int i = 0; i < numberOfNames; i++) {
-        for (int j = 0; j < numberOfNames; j++) {
+        for (int j = i; j < numberOfNames; j++) {
             int counter = 0;
             for (int k = 0; k < numberOfTrees; k++) {
-                distance[i][j] += allDistances[i][j][k];
-                if (allDistances[i][j][k] != 0) {
+                distance[i][j] += allDistances[i][j - i][k];
+                if (allDistances[i][j - i][k] != 0) {
                     counter++;
                 }
             }
@@ -40,7 +41,7 @@ void njstFromFile(struct node **root, const char *filename) {
     
     // array of chars to trees
     char **allLeafNames;
-    int numberOfLeafNames;
+    int numberOfLeafNames = 0;
     struct node **tree = (struct node **) calloc(sizeof(struct node *), numberOfTrees);
     for (int i = 0; i < numberOfTrees; i++) {
         // parse newick format to tree, add leaf names to allLeafNamesArray
@@ -52,8 +53,8 @@ void njstFromFile(struct node **root, const char *filename) {
     // allocate space for allLeafDistances array
     double ***allLeafDistances = (double ***) calloc(sizeof(double **), numberOfLeafNames);
     for (int i = 0; i < numberOfLeafNames; i++) {
-        allLeafDistances[i] = (double **) calloc(sizeof(double *), numberOfLeafNames);
-        for (int j = 0; j < numberOfLeafNames; j++) {
+        allLeafDistances[i] = (double **) calloc(sizeof(double *), numberOfLeafNames - i);
+        for (int j = 0; j < numberOfLeafNames - i; j++) {
             allLeafDistances[i][j] = (double *) calloc(sizeof(double), numberOfTrees);
         }
     }
@@ -64,7 +65,7 @@ void njstFromFile(struct node **root, const char *filename) {
         int size = tree[i]->numberOfLeaves;
         double **dist = (double **) calloc(sizeof(double*), size);
         for (int j = 0; j < size; j++) {
-            dist[j] = (double *) calloc(sizeof(double), size);
+            dist[j] = (double *) calloc(sizeof(double), size - j);
         }
         char **name = (char **) calloc(sizeof(char *), size);
         for (int j = 0; j < size; j++) {
@@ -77,7 +78,7 @@ void njstFromFile(struct node **root, const char *filename) {
         
         // copy distances to allLeafDistances array
         for (int j = 0; j < size; j++) {
-            for (int k = 0; k < size; k++) {
+            for (int k = j; k < size; k++) {
                 int ii;
                 int jj;
                 for (int l = 0; l < numberOfLeafNames; l++) {
@@ -88,10 +89,14 @@ void njstFromFile(struct node **root, const char *filename) {
                         jj = l;
                     }
                 }
-                allLeafDistances[ii][jj][i] = dist[j][k];
+                if (jj < ii) {
+                    int tmp = ii;
+                    ii = jj;
+                    jj = tmp;
+                }
+                allLeafDistances[ii][jj - ii][i] = dist[j][k - j];
             }
         }
-        
         for (int j = 0; j < size; j++) {
             free(name[j]);
             free(dist[j]);
@@ -110,10 +115,19 @@ void njstFromFile(struct node **root, const char *filename) {
     // Average over all trees
     averageDistances(allLeafDistances, distance, numberOfLeafNames, numberOfTrees);
     
-    // Free allocate space allDistances
+    
     for (int i = 0; i < numberOfLeafNames; i++) {
         for (int j = 0; j < numberOfLeafNames; j++) {
-            free(allLeafDistances[i][j]);
+            if (j < i) {
+                distance[i][j] = distance[j][i];
+            }
+        }
+    }
+
+    // Free allocate space allDistances
+    for (int i = 0; i < numberOfLeafNames; i++) {
+        for (int j = i; j < numberOfLeafNames; j++) {
+            free(allLeafDistances[i][j - i]);
         }
         free(allLeafDistances[i]);
     }

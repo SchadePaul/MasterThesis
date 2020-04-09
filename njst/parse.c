@@ -76,7 +76,7 @@ void readFileToArray(const char *filename, char ***newickTree, int *numberOfTree
                 if (posInLine % lineWidthIntervall == 0) {
                     int fromSize = posInLine;
                     int toSize = fromSize + lineWidthIntervall;
-                    extenCharSize(&(*newickTree)[indexTree], fromSize, toSize);
+                    extenCharSize(&((*newickTree)[indexTree]), fromSize, toSize);
                 }
                 
                 // Add char to array
@@ -109,7 +109,9 @@ void addName(char *name, char ***allNames, int *currentLength) {
         }
         new[*currentLength] = (char*) calloc(sizeof(char), strlen(name));
         strcpy(new[*currentLength], name);
-        free(*allNames);
+        if (*currentLength > 1) {
+            free(*allNames);
+        }
         *allNames = new;
         *currentLength += 1;
     }
