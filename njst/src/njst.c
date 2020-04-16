@@ -115,11 +115,9 @@ void njstFromFile(struct node **root, const char *filename) {
         for (int j = 0; j < numberOfLeafNames; j++) {
             free(allLeafDistances[i][j]);
         }
-        free(distance[i]);
         free(allLeafDistances[i]);
         free(allLeafNames[i]);
     }
-    free(distance);
     free(allLeafDistances);
     free(allLeafNames);
 }
