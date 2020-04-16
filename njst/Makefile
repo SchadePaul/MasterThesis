@@ -1,2 +1,2 @@
-main: main.c parse.c njst.c tree.c neighborJoining.c
-	gcc -g -O3 main.c parse.c njst.c tree.c neighborJoining.c -o main
+main: main.c src/parse.c src/njst.c src/tree.c src/neighborJoining.c
+	gcc -O2 main.c src/parse.c src/njst.c src/tree.c src/neighborJoining.c -o main

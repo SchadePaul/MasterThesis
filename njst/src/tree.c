@@ -43,60 +43,63 @@ void freeTree(struct node *tree) {
     }
 }
 
-void editDistanceForUp(int index, struct node *current, double **dist, int size) {
-    // Edit distances for going up
-    for (int i = 0; i < index - current->numberOfLeaves + 1; i++) {
+void goingUp(int index, int numberOfLeaves, double dist, double **allDist, int size) {
+    for (int i = index - numberOfLeaves + 1; i <= index; i++) {
         for (int j = index + 1; j < size; j++) {
-            dist[i][j - i] -= current->distToParent;
-        }
-    }
-    for (int i = index - current->numberOfLeaves + 1; i <= index; i++) {
-        for (int j = index + 1; j < size; j++) {
-            dist[i][j - i] += current->distToParent;
+            allDist[i][j - i] += 1;
         }
     }
 }
-void editDistanceForDown(int index, struct node *current, double **dist, int size) {
-    // Edit distances for going down
+
+void goingDown(int index, int numberOfLeaves, double dist, double **allDist) {
     for (int i = 0; i < index; i++) {
-        for (int j = index; j < size; j++) {
-            dist[i][j - i] += current->distToParent;
+        for (int j = index; j < index + numberOfLeaves; j++) {
+            allDist[i][j - i] += 1;
         }
     }
 }
 
 
-
-// TODO: Last node might be not done right, only works if no internal nodes appear
 void leafToLeafDistance(struct node *root, double **dist, int size, char **name) {
-    struct node *current = root;
     int index = 0;
-    // Iterate through all terminal nodes ahead
-    while (index < size - 1) {
-        // Go depth first
-        while (current->firstChild != NULL) {
-            current = current->firstChild;
-            editDistanceForDown(index, current, dist, size);
-        }
-        // Get name of terminal node
-        strcpy(name[index], current->name);
-        
-        // Go up until next sibling is found
-        while (current->nextSibling == NULL) {
-            editDistanceForUp(index, current, dist, size);
-            current = current->parent;
-        }
-        
-        // Go to next sibling
-        editDistanceForUp(index, current, dist, size);
-        current = current->nextSibling;
-        index++;
-        
-        // Get name of last terminal node
-        if (index == size - 1) {
-            strcpy(name[index], current->name);
-        }
-        editDistanceForDown(index, current, dist, size);
+    struct node *current = root;
+    
+    // go to first leave
+    while (current->firstChild != NULL) {
+        current = current->firstChild;
     }
     
+    while (1) {
+        while (current->firstChild != NULL) {
+            current = current->firstChild;
+            goingDown(index, current->numberOfLeaves, current->distToParent, dist);
+        }
+        
+        strcpy(name[index], current->name);
+        
+        while (current->nextSibling == NULL) {
+            if (index < size - 1) {
+                goingUp(index, current->numberOfLeaves, current->distToParent, dist, size);
+            }
+            
+            struct node *toFree = current;
+            current = current->parent;
+            free(toFree);
+            if (current == root) {
+                break;
+            }
+        }
+        if (current == root) {
+            free(current);
+            break;
+        }
+        
+        goingUp(index, current->numberOfLeaves, current->distToParent, dist, size);
+        index++;
+        struct node *toFree = current;
+        current = current->nextSibling;
+        free(toFree);
+        goingDown(index, current->numberOfLeaves, current->distToParent, dist);
+        
+    }
 }

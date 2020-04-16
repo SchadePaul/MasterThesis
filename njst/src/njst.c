@@ -8,25 +8,6 @@
 #include <errno.h>
 #include <sys/time.h>
 
-void averageDistances(double ***allDistances, double **distance, int numberOfNames, int numberOfTrees) {
-    for (int i = 0; i < numberOfNames; i++) {
-        for (int j = i; j < numberOfNames; j++) {
-            int counter = 0;
-            for (int k = 0; k < numberOfTrees; k++) {
-                distance[i][j] += allDistances[i][j - i][k];
-                if (allDistances[i][j - i][k] != 0) {
-                    counter++;
-                }
-            }
-            if (counter != 0) {
-                distance[i][j] = distance[i][j] / (double) counter;
-            } else {
-                distance[i][j] = 0;
-            }
-        }
-    }
-}
-
 void njstFromFile(struct node **root, const char *filename) {
     
     // read file to array of chars
@@ -50,95 +31,95 @@ void njstFromFile(struct node **root, const char *filename) {
     }
     free(newickTree);
     
-    // allocate space for allLeafDistances array
+    // All distance Array [i][j][0] sum of distances, [i][j][1] number of summands
     double ***allLeafDistances = (double ***) calloc(sizeof(double **), numberOfLeafNames);
     for (int i = 0; i < numberOfLeafNames; i++) {
-        allLeafDistances[i] = (double **) calloc(sizeof(double *), numberOfLeafNames - i);
-        for (int j = 0; j < numberOfLeafNames - i; j++) {
-            allLeafDistances[i][j] = (double *) calloc(sizeof(double), numberOfTrees);
+        allLeafDistances[i] = (double **) calloc(sizeof(double *), numberOfLeafNames);
+        for (int j = 0; j < numberOfLeafNames; j++) {
+            allLeafDistances[i][j] = (double *) calloc(sizeof(double *), 2);
         }
     }
     
-    // for all trees copmute distances between leaf nodes
     for (int i = 0; i < numberOfTrees; i++) {
-        // get number of leafs
+        // Number of Leaves in this tree
         int size = tree[i]->numberOfLeaves;
-        double **dist = (double **) calloc(sizeof(double*), size);
+        
+        // Half-Matrix for distances between leaves
+        double **dist = (double **) calloc(sizeof(double *), size);
         for (int j = 0; j < size; j++) {
             dist[j] = (double *) calloc(sizeof(double), size - j);
         }
+        
+        // Array of leave names
         char **name = (char **) calloc(sizeof(char *), size);
         for (int j = 0; j < size; j++) {
             name[j] = (char *) calloc(sizeof(char), maxNameLength);
         }
         
-        // compute leaf to leaf distance for all leafs
+        // Compute leaf distances
         leafToLeafDistance(tree[i], dist, size, name);
-        freeTree(tree[i]);
         
-        // copy distances to allLeafDistances array
+        // Add to overall distance matrix
+        
+        // Find name in all Names
+        int *index = (int *) calloc(sizeof(int), size);
         for (int j = 0; j < size; j++) {
-            for (int k = j; k < size; k++) {
-                int ii;
-                int jj;
-                for (int l = 0; l < numberOfLeafNames; l++) {
-                    if (strcmp(name[j], allLeafNames[l]) == 0) {
-                        ii = l;
-                    }
-                    if (strcmp(name[k], allLeafNames[l]) == 0) {
-                        jj = l;
-                    }
+            for (int k = 0; k < numberOfLeafNames; k++) {
+                if (strcmp(name[j], allLeafNames[k]) == 0) {
+                    index[j] = k;
+                    break;
                 }
+            }
+        }
+        
+        for (int j = 0; j < size; j++) {
+            for (int k = 0; k < size - j; k++) {
+                int ii = index[j];
+                int jj = index[k + j];
                 if (jj < ii) {
                     int tmp = ii;
                     ii = jj;
                     jj = tmp;
                 }
-                allLeafDistances[ii][jj - ii][i] = dist[j][k - j];
+                allLeafDistances[ii][jj][0] += dist[j][k];
+                allLeafDistances[ii][jj][1] += 1;
             }
         }
+        free(index);
+        
         for (int j = 0; j < size; j++) {
-            free(name[j]);
             free(dist[j]);
+            free(name[j]);
         }
-        free(dist);
         free(name);
+        free(dist);
     }
-    
-    free(tree);
     
     double **distance = (double **) calloc(sizeof(double*), numberOfLeafNames);
     for (int i = 0; i < numberOfLeafNames; i++) {
         distance[i] = (double *) calloc(sizeof(double), numberOfLeafNames);
     }
     
-    // Average over all trees
-    averageDistances(allLeafDistances, distance, numberOfLeafNames, numberOfTrees);
-    
-    
     for (int i = 0; i < numberOfLeafNames; i++) {
         for (int j = 0; j < numberOfLeafNames; j++) {
-            if (j < i) {
+            if (i < j) {
+                distance[i][j] = (allLeafDistances[i][j][0] - allLeafDistances[i][j][1]) / allLeafDistances[i][j][1];
+            } else {
                 distance[i][j] = distance[j][i];
             }
         }
     }
-
-    // Free allocate space allDistances
-    for (int i = 0; i < numberOfLeafNames; i++) {
-        for (int j = i; j < numberOfLeafNames; j++) {
-            free(allLeafDistances[i][j - i]);
-        }
-        free(allLeafDistances[i]);
-    }
-    free(allLeafDistances);
     
-    // copmute species tree from distance array
     makeTreeFromDistanceArray(distance, numberOfLeafNames, root, allLeafNames);
-    
-    // Free allocate space numberOfNames, distance
     for (int i = 0; i < numberOfLeafNames; i++) {
+        for (int j = 0; j < numberOfLeafNames; j++) {
+            free(allLeafDistances[i][j]);
+        }
+        free(distance[i]);
+        free(allLeafDistances[i]);
         free(allLeafNames[i]);
     }
+    free(distance);
+    free(allLeafDistances);
     free(allLeafNames);
 }

@@ -63,27 +63,17 @@ void readFileToArray(const char *filename, char ***newickTree, int *numberOfTree
         if (c == '\n') {
             continue;
         }
-        // Ignore comments in []-brackets
-        if (c == '[') {
-            ignore = 1;
-        } else if (c == ']') {
-            ignore = 0;
-            continue;
-        }
-        
+
         if (c != endOfTree) {
-            if (ignore == 0) {
-                if (posInLine % lineWidthIntervall == 0) {
-                    int fromSize = posInLine;
-                    int toSize = fromSize + lineWidthIntervall;
-                    extenCharSize(&((*newickTree)[indexTree]), fromSize, toSize);
-                }
-                
-                // Add char to array
-                (*newickTree)[indexTree][posInLine] = c;
-                posInLine++;
+            if (posInLine % lineWidthIntervall == 0) {
+                int fromSize = posInLine;
+                int toSize = fromSize + lineWidthIntervall;
+                extenCharSize(&((*newickTree)[indexTree]), fromSize, toSize);
             }
             
+            // Add char to array
+            (*newickTree)[indexTree][posInLine] = c;
+            posInLine++;
         } else {
             indexTree++;
             extendCharArraybyTree(newickTree, indexTree + 1);

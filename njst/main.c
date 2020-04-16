@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "njst.h"
-#include "parse.h"
-#include "tree.h"
-#include "node.h"
+#include "src/njst.h"
+#include "src/parse.h"
+#include "src/tree.h"
+#include "src/node.h"
 #include <unistd.h>
 #include <getopt.h>
 #include <errno.h>
