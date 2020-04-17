@@ -46,15 +46,15 @@ void freeTree(struct node *tree) {
 void goingUp(int index, int numberOfLeaves, double dist, double **allDist, int size) {
     for (int i = index - numberOfLeaves + 1; i <= index; i++) {
         for (int j = index + 1; j < size; j++) {
-            allDist[i][j - i] += 1;
+            allDist[i][j - i] += (double) dist / (double) size ;
         }
     }
 }
 
-void goingDown(int index, int numberOfLeaves, double dist, double **allDist) {
+void goingDown(int index, int numberOfLeaves, double dist, double **allDist, int size) {
     for (int i = 0; i < index; i++) {
         for (int j = index; j < index + numberOfLeaves; j++) {
-            allDist[i][j - i] += 1;
+            allDist[i][j - i] += (double) dist / (double) size ;
         }
     }
 }
@@ -72,7 +72,7 @@ void leafToLeafDistance(struct node *root, double **dist, int size, char **name)
     while (1) {
         while (current->firstChild != NULL) {
             current = current->firstChild;
-            goingDown(index, current->numberOfLeaves, current->distToParent, dist);
+            goingDown(index, current->numberOfLeaves, current->distToParent, dist, size);
         }
         
         strcpy(name[index], current->name);
@@ -99,7 +99,7 @@ void leafToLeafDistance(struct node *root, double **dist, int size, char **name)
         struct node *toFree = current;
         current = current->nextSibling;
         free(toFree);
-        goingDown(index, current->numberOfLeaves, current->distToParent, dist);
+        goingDown(index, current->numberOfLeaves, current->distToParent, dist, size);
         
     }
 }

@@ -8,6 +8,8 @@
 #include <errno.h>
 #include <sys/time.h>
 
+int static const expander = 200;
+
 void njstFromFile(struct node **root, const char *filename) {
     
     // read file to array of chars
@@ -36,7 +38,7 @@ void njstFromFile(struct node **root, const char *filename) {
     for (int i = 0; i < numberOfLeafNames; i++) {
         allLeafDistances[i] = (double **) calloc(sizeof(double *), numberOfLeafNames);
         for (int j = 0; j < numberOfLeafNames; j++) {
-            allLeafDistances[i][j] = (double *) calloc(sizeof(double *), 2);
+            allLeafDistances[i][j] = (double *) calloc(sizeof(double *), numberOfTrees);
         }
     }
     
@@ -81,8 +83,18 @@ void njstFromFile(struct node **root, const char *filename) {
                     ii = jj;
                     jj = tmp;
                 }
-                allLeafDistances[ii][jj][0] += dist[j][k];
-                allLeafDistances[ii][jj][1] += 1;
+//                allLeafDistances[ii][jj][0] += 1;
+//                if ((int) allLeafDistances[ii][jj][0] % expander == 0) {
+//                    double *tmp = allLeafDistances[ii][jj];
+//                    allLeafDistances[ii][jj] = calloc(sizeof(double), ((tmp[0] / expander) + 1) * expander);
+//                    for (int l = 0; l < tmp[0]; l++) {
+//                        allLeafDistances[ii][jj][l] = tmp[l];
+//                    }
+//                    free(tmp);
+//                }
+                if (allLeafDistances[ii][jj][i] > dist[j][k] || allLeafDistances[ii][jj][i] == 0) {
+                    allLeafDistances[ii][jj][i] = dist[j][k];
+                }
             }
         }
         free(index);
@@ -103,7 +115,12 @@ void njstFromFile(struct node **root, const char *filename) {
     for (int i = 0; i < numberOfLeafNames; i++) {
         for (int j = 0; j < numberOfLeafNames; j++) {
             if (i < j) {
-                distance[i][j] = (allLeafDistances[i][j][0] - allLeafDistances[i][j][1]) / allLeafDistances[i][j][1];
+                int counter = 0;
+                for (int k = 0; k < numberOfTrees; k++) {
+                    distance[i][j] += allLeafDistances[i][j][k];
+                    counter += (allLeafDistances[i][j][k] != 0);
+                }
+                distance[i][j] = distance[i][j] / (double) counter;
             } else {
                 distance[i][j] = distance[j][i];
             }

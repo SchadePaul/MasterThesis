@@ -9,11 +9,12 @@ inputName = "allTrees"
 outputName = "output"
 numberOfGeneTrees = 1000
 numberOfSets = 10
-numberOfLeaves = [15,25,50,75,100,200]
+numberOfLeaves = [15,25,50,75,100,150,200]
 distances = []
 times = []
 fileResults = open("results", "w")
 for leaves in numberOfLeaves:
+    print("leaves: " + str(leaves))
 #    cmd = subprocess.Popen(["../externalWork/SimPhy_1.0.2/bin/simphy_mac64", "-sl", "f:" + str(leaves), "-rs", str(numberOfSets), "-rl", "f:" + str(numberOfGeneTrees), "-rg", "1", "-sb", "f:0.000000005", "-sd", "f:0", "-st", "ln:21.25,0.2", "-so", "f:1", "-si", "f:1", "-sp", "f:470000000", "-su", "ln:-21.9,0.1", "-hh", "f:1", "-hs", "ln:1.5,1", "-hl", "ln:1.551533,0.6931472", "-hg", "ln:1.5,1", "-cs", "9644", "-v", "3", "-o", nameOfDirectory + "_" + str(leaves), "-ot", "0", "-op", "1", "-lb", "f:0.00000000049", "-ld", "f:0.00000000049", "-lt", "f:0"])
 #    cmd.communicate()
     exponentGeneTree = int(math.log10(numberOfGeneTrees))
@@ -47,6 +48,7 @@ for leaves in numberOfLeaves:
         cmd2 = subprocess.Popen(["./njst/main", "-i", nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + inputName, "-o", nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + outputName])
         cmd2.communicate()
         executionTime = int(round(time.time() * 1000)) - currentTime
+        print(executionTime)
         fileSpeciesTree = open(nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/s_tree.trees", "r")
         fileOutputTree = open(nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + outputName, "r")
         strFileOutputTree = fileOutputTree.read()
