@@ -45,10 +45,9 @@ for leaves in numberOfLeaves:
                     file.write(c)
         file.close()
         currentTime = int(round(time.time() * 1000))
-        cmd2 = subprocess.Popen(["./njst/main", "-i", nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + inputName, "-o", nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + outputName])
+        cmd2 = subprocess.Popen(["./njst/main", "-q", "0.33", "-i", nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + inputName, "-o", nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + outputName])
         cmd2.communicate()
         executionTime = int(round(time.time() * 1000)) - currentTime
-        print(executionTime)
         fileSpeciesTree = open(nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/s_tree.trees", "r")
         fileOutputTree = open(nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + outputName, "r")
         strFileOutputTree = fileOutputTree.read()
@@ -62,6 +61,7 @@ for leaves in numberOfLeaves:
         distance = dendropy.calculate.treecompare.symmetric_difference(dataSet.tree_lists[0][0], dataSet.tree_lists[1][0], is_bipartitions_updated=False)
         distances.append(distance)
         times.append(executionTime)
+        print(str(executionTime) + "\t" + str(distance))
         fileResults.write(str(leaves) + "\t" + str(numberOfGeneTrees) + "\t" + str(executionTime) + "\t" + str(distance) + "\n")
         
 fileResults.close()

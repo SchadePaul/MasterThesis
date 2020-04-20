@@ -8,9 +8,57 @@
 #include <errno.h>
 #include <sys/time.h>
 
-int static const expander = 200;
+void sortSmall(double* distances, int from, int to) {
+    int swap = 1;
+    while (swap == 1) {
+        swap = 0;
+        for (int i = from; i < to; i++) {
+            if (distances[i] > distances[i + 1]) {
+                double tmp = distances[i];
+                distances[i] = distances[i + 1];
+                distances[i + 1] = tmp;
+                swap = 1;
+            }
+        }
+    }
+}
 
-void njstFromFile(struct node **root, const char *filename) {
+void sort(double* distances, int from, int to) {
+    if ((to - from) < 15) {
+        sortSmall(distances, from, to);
+        return;
+    }
+    int pivotIndex = (rand() % (to - from)) + from;
+    double pivot = distances[pivotIndex];
+    int left = from;
+    int right = to;
+    int same = 0;
+    while (1) {
+        if (distances[left] <= pivot && left < to) {
+            if (distances[left] == pivot) {
+                same++;
+            }
+            left++;
+        }
+        if (distances[right] > pivot && right > from) {
+            right--;
+        }
+        if (left >= right) {
+            break;
+        }
+        double tmp = distances[left];
+        distances[left] = distances[right];
+        distances[right] = tmp;
+    }
+    if (same == to - from) {
+        return;
+    }
+    sort(distances, from, right);
+    sort(distances, left, to);
+    return;
+}
+
+void njstFromFile(struct node **root, const char *filename, int branchLength, int minNJst, int normDistance, double quartil) {
     
     // read file to array of chars
     char **newickTree;
@@ -38,7 +86,7 @@ void njstFromFile(struct node **root, const char *filename) {
     for (int i = 0; i < numberOfLeafNames; i++) {
         allLeafDistances[i] = (double **) calloc(sizeof(double *), numberOfLeafNames);
         for (int j = 0; j < numberOfLeafNames; j++) {
-            allLeafDistances[i][j] = (double *) calloc(sizeof(double *), numberOfTrees);
+            allLeafDistances[i][j] = (double *) calloc(sizeof(double *), numberOfTrees + 1);
         }
     }
     
@@ -59,7 +107,7 @@ void njstFromFile(struct node **root, const char *filename) {
         }
         
         // Compute leaf distances
-        leafToLeafDistance(tree[i], dist, size, name);
+        leafToLeafDistance(tree[i], dist, size, name, normDistance, branchLength);
         
         // Add to overall distance matrix
         
@@ -83,17 +131,27 @@ void njstFromFile(struct node **root, const char *filename) {
                     ii = jj;
                     jj = tmp;
                 }
-//                allLeafDistances[ii][jj][0] += 1;
-//                if ((int) allLeafDistances[ii][jj][0] % expander == 0) {
-//                    double *tmp = allLeafDistances[ii][jj];
-//                    allLeafDistances[ii][jj] = calloc(sizeof(double), ((tmp[0] / expander) + 1) * expander);
-//                    for (int l = 0; l < tmp[0]; l++) {
-//                        allLeafDistances[ii][jj][l] = tmp[l];
-//                    }
-//                    free(tmp);
-//                }
-                if (allLeafDistances[ii][jj][i] > dist[j][k] || allLeafDistances[ii][jj][i] == 0) {
-                    allLeafDistances[ii][jj][i] = dist[j][k];
+                if (minNJst) {
+                    // minNJst
+                    if (allLeafDistances[ii][jj][i + 1] > dist[j][k]) {
+                        allLeafDistances[ii][jj][i + 1] = dist[j][k];
+                    } else if (allLeafDistances[ii][jj][i + 1] == 0) {
+                        allLeafDistances[ii][jj][i + 1] = dist[j][k];
+                        allLeafDistances[ii][jj][0] += 1;
+                    }
+                } else {
+                    // NJst
+                    allLeafDistances[ii][jj][0] += 1;
+                    if (((int) allLeafDistances[ii][jj][0] % numberOfTrees) == 0) {
+                        double *tmp = allLeafDistances[ii][jj];
+                        allLeafDistances[ii][jj] = (double *) calloc(sizeof(double), ((tmp[0] / numberOfTrees) + 1) * numberOfTrees);
+                        for (int index = 0; index < tmp[0]; index++) {
+                            allLeafDistances[ii][jj][index] = tmp[index];
+                        }
+                        free(tmp);
+                    }
+                    allLeafDistances[ii][jj][(int) allLeafDistances[ii][jj][0]] = dist[j][k];
+                    
                 }
             }
         }
@@ -107,6 +165,11 @@ void njstFromFile(struct node **root, const char *filename) {
         free(dist);
     }
     
+    
+    
+    
+    
+    
     double **distance = (double **) calloc(sizeof(double*), numberOfLeafNames);
     for (int i = 0; i < numberOfLeafNames; i++) {
         distance[i] = (double *) calloc(sizeof(double), numberOfLeafNames);
@@ -115,12 +178,34 @@ void njstFromFile(struct node **root, const char *filename) {
     for (int i = 0; i < numberOfLeafNames; i++) {
         for (int j = 0; j < numberOfLeafNames; j++) {
             if (i < j) {
-                int counter = 0;
-                for (int k = 0; k < numberOfTrees; k++) {
-                    distance[i][j] += allLeafDistances[i][j][k];
-                    counter += (allLeafDistances[i][j][k] != 0);
+                if (quartil != 0) {
+                    if (minNJst) {
+                        sort(allLeafDistances[i][j], 1, numberOfTrees + 1);
+                    } else {
+                        sort(allLeafDistances[i][j], 1, (int) allLeafDistances[i][j][0]);
+                    }
                 }
-                distance[i][j] = distance[i][j] / (double) counter;
+                
+                int kMax = allLeafDistances[i][j][0];
+                if (minNJst) {
+                    kMax = numberOfTrees;
+                }
+                
+                // take median
+                if (quartil != 0) {
+                    if (minNJst) {
+                        distance[i][j] = allLeafDistances[i][j][(numberOfTrees - (int) allLeafDistances[i][j][0]) + (int) (allLeafDistances[i][j][0] * quartil)];
+                    } else {
+                        distance[i][j] = allLeafDistances[i][j][(int) (allLeafDistances[i][j][0] * quartil)];
+                    }
+                } else {
+                    for (int k = 0; k < kMax; k++) {
+                        distance[i][j] += allLeafDistances[i][j][k + 1];
+                    }
+                    if (allLeafDistances[i][j][0] != 0) {
+                        distance[i][j] = distance[i][j] / allLeafDistances[i][j][0];
+                    }
+                }
             } else {
                 distance[i][j] = distance[j][i];
             }

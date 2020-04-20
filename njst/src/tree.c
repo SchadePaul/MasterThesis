@@ -43,26 +43,30 @@ void freeTree(struct node *tree) {
     }
 }
 
-void goingUp(int index, int numberOfLeaves, double dist, double **allDist, int size) {
+void goingUp(int index, int numberOfLeaves, double dist, double **allDist, int size, double norm) {
     for (int i = index - numberOfLeaves + 1; i <= index; i++) {
         for (int j = index + 1; j < size; j++) {
-            allDist[i][j - i] += (double) dist / (double) size ;
+            allDist[i][j - i] += dist / norm ;
         }
     }
 }
 
-void goingDown(int index, int numberOfLeaves, double dist, double **allDist, int size) {
+void goingDown(int index, int numberOfLeaves, double dist, double **allDist, double norm) {
     for (int i = 0; i < index; i++) {
         for (int j = index; j < index + numberOfLeaves; j++) {
-            allDist[i][j - i] += (double) dist / (double) size ;
+            allDist[i][j - i] += dist / norm;
         }
     }
 }
 
 
-void leafToLeafDistance(struct node *root, double **dist, int size, char **name) {
+void leafToLeafDistance(struct node *root, double **dist, int size, char **name, int normDistance, int branchLength) {
     int index = 0;
     struct node *current = root;
+    double norm = 1;
+    if (normDistance) {
+        norm = (double) size;
+    }
     
     // go to first leave
     while (current->firstChild != NULL) {
@@ -72,14 +76,22 @@ void leafToLeafDistance(struct node *root, double **dist, int size, char **name)
     while (1) {
         while (current->firstChild != NULL) {
             current = current->firstChild;
-            goingDown(index, current->numberOfLeaves, current->distToParent, dist, size);
+            if (!branchLength) {
+                goingDown(index, current->numberOfLeaves, 1.0, dist, norm);
+            } else {
+                goingDown(index, current->numberOfLeaves, current->distToParent, dist, norm);
+            }
         }
         
         strcpy(name[index], current->name);
         
         while (current->nextSibling == NULL) {
             if (index < size - 1) {
-                goingUp(index, current->numberOfLeaves, current->distToParent, dist, size);
+                if (!branchLength) {
+                    goingUp(index, current->numberOfLeaves, 1.0, dist, size, norm);
+                } else {
+                    goingUp(index, current->numberOfLeaves, current->distToParent, dist, size, norm);
+                }
             }
             
             struct node *toFree = current;
@@ -93,13 +105,19 @@ void leafToLeafDistance(struct node *root, double **dist, int size, char **name)
             free(current);
             break;
         }
-        
-        goingUp(index, current->numberOfLeaves, current->distToParent, dist, size);
+        if (!branchLength) {
+            goingUp(index, current->numberOfLeaves, 1.0, dist, size, norm);
+        } else {
+            goingUp(index, current->numberOfLeaves, current->distToParent, dist, size, norm);
+        }
         index++;
         struct node *toFree = current;
         current = current->nextSibling;
         free(toFree);
-        goingDown(index, current->numberOfLeaves, current->distToParent, dist, size);
-        
+        if (!branchLength) {
+            goingDown(index, current->numberOfLeaves, 1.0, dist, norm);
+        } else {
+            goingDown(index, current->numberOfLeaves, current->distToParent, dist, norm);
+        }
     }
 }
