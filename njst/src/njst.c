@@ -23,12 +23,12 @@ void sortSmall(double* distances, int from, int to) {
     }
 }
 
-void sort(double* distances, int from, int to) {
+void sort(double* distances, int from, int to, int seed) {
     if ((to - from) < 15) {
         sortSmall(distances, from, to);
         return;
     }
-    int pivotIndex = (rand() % (to - from)) + from;
+    int pivotIndex = (seed % (to - from)) + from;
     double pivot = distances[pivotIndex];
     int left = from;
     int right = to;
@@ -53,8 +53,8 @@ void sort(double* distances, int from, int to) {
     if (same == to - from) {
         return;
     }
-    sort(distances, from, right);
-    sort(distances, left, to);
+    sort(distances, from, right, seed + 1);
+    sort(distances, left, to, seed + 1);
     return;
 }
 
@@ -180,9 +180,9 @@ void njstFromFile(struct node **root, const char *filename, int branchLength, in
             if (i < j) {
                 if (quartil != 0) {
                     if (minNJst) {
-                        sort(allLeafDistances[i][j], 1, numberOfTrees + 1);
+                        sort(allLeafDistances[i][j], 1, numberOfTrees + 1, 1);
                     } else {
-                        sort(allLeafDistances[i][j], 1, (int) allLeafDistances[i][j][0]);
+                        sort(allLeafDistances[i][j], 1, (int) allLeafDistances[i][j][0], 1);
                     }
                 }
                 

@@ -45,7 +45,7 @@ for leaves in numberOfLeaves:
                     file.write(c)
         file.close()
         currentTime = int(round(time.time() * 1000))
-        cmd2 = subprocess.Popen(["./njst/main", "-q", "0.33", "-i", nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + inputName, "-o", nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + outputName])
+        cmd2 = subprocess.Popen(["./njst/main", "-q", "0.05", "-i", nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + inputName, "-o", nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + outputName])
         cmd2.communicate()
         executionTime = int(round(time.time() * 1000)) - currentTime
         fileSpeciesTree = open(nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/s_tree.trees", "r")
