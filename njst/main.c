@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     int minNJst = 0;
     int normDistance = 0;
     double quartil = 0;
-    while((c = getopt(argc,argv,"bmnq:i:o:"))!=-1) {
+    while((c = getopt(argc,argv,"bmn:q:i:o:"))!=-1) {
         switch(c) {
             case 'i':
                 input = optarg;
@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
                 minNJst = 1;
                 break;
             case 'n':
-                normDistance = 1;
+                normDistance = (int) atof(optarg);
                 break;
         }
     }

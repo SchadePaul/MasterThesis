@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 void freeTree(struct node *tree) {
     struct node *before = tree;
@@ -64,8 +65,10 @@ void leafToLeafDistance(struct node *root, double **dist, int size, char **name,
     int index = 0;
     struct node *current = root;
     double norm = 1;
-    if (normDistance) {
+    if (normDistance == 1) {
         norm = (double) size;
+    } else if (normDistance == 2) {
+        norm = log((double) size);
     }
     
     // go to first leave
