@@ -14,10 +14,10 @@ int main(int argc, char **argv) {
     char *input;
     char *output;
     int branchLength = 0;
-    int minNJst = 0;
-    int normDistance = 0;
-    double quartil = 0;
-    while((c = getopt(argc,argv,"bmn:q:i:o:"))!=-1) {
+    int miniNJ = 0;
+    int norm = 0;
+    int weighted = 0;
+    while((c = getopt(argc,argv,"bmwn:o:i:"))!=-1) {
         switch(c) {
             case 'i':
                 input = optarg;
@@ -25,24 +25,25 @@ int main(int argc, char **argv) {
             case 'o':
                 output = optarg;
                 break;
-            case 'q':
-                quartil = atof(optarg);
+            case 'n':
+                norm = (int) atof(optarg);
+                break;
+            case 'w':
+                weighted = 1;
+                break;
+            case 'm':
+                miniNJ = 1;
                 break;
             case 'b':
                 branchLength = 1;
                 break;
-            case 'm':
-                minNJst = 1;
-                break;
-            case 'n':
-                normDistance = (int) atof(optarg);
-                break;
+            
         }
     }
 
     // Declare root for species tree
     struct node *speciestree = (struct node*) calloc(sizeof(struct node), 1);
-    njstFromFile(&speciestree, input, branchLength, minNJst, normDistance, quartil);
+    njstFromFile(&speciestree, input, norm, weighted, miniNJ, branchLength);
     if (errno != 0) {
         return errno;
     }
