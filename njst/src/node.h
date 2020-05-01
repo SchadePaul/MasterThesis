@@ -12,6 +12,7 @@ struct node {
     struct node *parent;
     struct node *firstChild;
     struct node *nextSibling;
+    int tag;    // tag == 0: Speciation, tag == 1: Duplication
 };
 
 #endif

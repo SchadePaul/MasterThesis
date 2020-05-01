@@ -17,7 +17,9 @@ int main(int argc, char **argv) {
     int miniNJ = 0;
     int norm = 0;
     int weighted = 0;
-    while((c = getopt(argc,argv,"bmwn:o:i:"))!=-1) {
+    int tagged = 0;
+    int root = 0;
+    while((c = getopt(argc,argv,"bmwtrn:o:i:"))!=-1) {
         switch(c) {
             case 'i':
                 input = optarg;
@@ -28,6 +30,12 @@ int main(int argc, char **argv) {
             case 'n':
                 norm = (int) atof(optarg);
                 break;
+            case 'r':
+                root = 1;
+                break;
+            case 't':
+                tagged = 1;
+                break;
             case 'w':
                 weighted = 1;
                 break;
@@ -37,13 +45,23 @@ int main(int argc, char **argv) {
             case 'b':
                 branchLength = 1;
                 break;
-            
         }
     }
 
     // Declare root for species tree
     struct node *speciestree = (struct node*) calloc(sizeof(struct node), 1);
-    njstFromFile(&speciestree, input, norm, weighted, miniNJ, branchLength);
+    
+    if (tagged) {
+        taggedNJFromFile(&speciestree, input, norm, root);
+    } else {
+        if (miniNJ) {
+            miniNJFromFile(&speciestree, input, norm, weighted, branchLength);
+        } else {
+            njstFromFile(&speciestree, input, norm, weighted, branchLength);
+        }
+    }
+    
+    
     if (errno != 0) {
         return errno;
     }
