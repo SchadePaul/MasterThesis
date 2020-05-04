@@ -30,7 +30,7 @@ void readFileToTrees(struct node ***trees, const char *filename, int *numberOfTr
 }
 
 
-void taggedNJFromFile(struct node **root, const char *filename, int norm, int rooted) {
+void taggedNJFromFile(struct node **root, const char *filename, int norm, int rooted, int weighted, int square) {
     int numberOfTrees;
     char **allLeafNames;
     int numberOfLeafNames = 0;
@@ -84,6 +84,12 @@ void taggedNJFromFile(struct node **root, const char *filename, int norm, int ro
             }
         }
 
+        int multiply = 1;
+        if (weighted == 1) {
+            multiply = size;
+//            printf("weighted:\t%d\n",size);
+        }
+        
         for (int j = 0; j < size; j++) {
             for (int k = 0; k < size - j; k++) {
                 if (dist[j][k] > 0) {
@@ -94,9 +100,13 @@ void taggedNJFromFile(struct node **root, const char *filename, int norm, int ro
                         ii = jj;
                         jj = tmp;
                     }
-
-                    allLeafDistances[ii][jj][0] += 1;
-                    allLeafDistances[ii][jj][1] += dist[j][k];
+                    if (square == 1) {
+                        allLeafDistances[ii][jj][0] += 1 * multiply;
+                        allLeafDistances[ii][jj][1] += dist[j][k] * dist[j][k] * multiply;
+                    } else {
+                        allLeafDistances[ii][jj][0] += 1 * multiply;
+                        allLeafDistances[ii][jj][1] += dist[j][k] * multiply;
+                    }
                 }
             }
         }
@@ -120,7 +130,11 @@ void taggedNJFromFile(struct node **root, const char *filename, int norm, int ro
         for (int j = 0; j < numberOfLeafNames; j++) {
             if (i < j) {
                 if (allLeafDistances[i][j][0] != 0) {
-                    distance[i][j] = allLeafDistances[i][j][1];
+                    if (square == 1) {
+                        distance[i][j] = sqrt(allLeafDistances[i][j][1]);
+                    } else {
+                        distance[i][j] = allLeafDistances[i][j][1];
+                    }
                     distance[i][j] = distance[i][j] / allLeafDistances[i][j][0];
                 }
             } else {
@@ -260,7 +274,7 @@ void miniNJFromFile(struct node **root, const char *filename, int norm, int weig
 
 }
 
-void njstFromFile(struct node **root, const char *filename, int norm, int weighted, int branchLength) {
+void njstFromFile(struct node **root, const char *filename, int norm, int weighted, int branchLength, int square) {
     
     int numberOfTrees;
     char **allLeafNames;
@@ -309,6 +323,11 @@ void njstFromFile(struct node **root, const char *filename, int norm, int weight
             }
         }
 
+        int multiply = 1;
+        if (weighted == 1) {
+            multiply = size;
+        }
+        
         for (int j = 0; j < size; j++) {
             for (int k = 0; k < size - j; k++) {
                 
@@ -320,12 +339,14 @@ void njstFromFile(struct node **root, const char *filename, int norm, int weight
                     jj = tmp;
                 }
 
-                int multiply = 1;
-                if (weighted == 1) {
-                    multiply = size;
+                
+                if (square == 1) {
+                    allLeafDistances[ii][jj][0] += 1 * multiply;
+                    allLeafDistances[ii][jj][1] += dist[j][k] * dist[j][k] * multiply;
+                } else {
+                    allLeafDistances[ii][jj][0] += 1 * multiply;
+                    allLeafDistances[ii][jj][1] += dist[j][k] * multiply;
                 }
-                allLeafDistances[ii][jj][0] += 1 * multiply;
-                allLeafDistances[ii][jj][1] += dist[j][k] * multiply;
 
             }
         }
@@ -349,7 +370,11 @@ void njstFromFile(struct node **root, const char *filename, int norm, int weight
         for (int j = 0; j < numberOfLeafNames; j++) {
             if (i < j) {
                 if (allLeafDistances[i][j][0] != 0) {
-                    distance[i][j] = allLeafDistances[i][j][1];
+                    if (square == 1) {
+                        distance[i][j] = sqrt(allLeafDistances[i][j][1]);
+                    } else {
+                        distance[i][j] = allLeafDistances[i][j][1];
+                    }
                     distance[i][j] = distance[i][j] / allLeafDistances[i][j][0];
                 }
             } else {
