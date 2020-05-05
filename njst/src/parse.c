@@ -8,6 +8,18 @@
 const int lineWidthIntervall = 50;
 const char endOfTree = ';';
 
+int compNumberOfLeaves(struct node *current);
+static void extendCharArraybyTree(char ***newickTree, int newNumberOfTrees);
+static void extenCharSize(char **oldChar, int fromSize, int toSize);
+void readFileToArray(const char *filename, char ***newickTree, int *numberOfTrees);
+static void addName(char *name, char ***allNames, int *currentLength);
+static int isTreeOperator(char c);
+void newickTreeToTree(char *newickTree, struct node **tree, char ***allLeafNames, int *numberOfLeafNames);
+static int maxDepth(struct node *current);
+static void fillArray(char *array, struct node *current, int width, int offsetX, int offsetY);
+void printTree(struct node *tree);
+void saveTree(struct node *tree, const char *name);
+
 int compNumberOfLeaves(struct node *current) {
     int num = 0;
     if (current->firstChild != NULL) {
@@ -22,7 +34,7 @@ int compNumberOfLeaves(struct node *current) {
     return num;
 }
 
-void extendCharArraybyTree(char ***newickTree, int newNumberOfTrees) {
+static void extendCharArraybyTree(char ***newickTree, int newNumberOfTrees) {
     char **newArray = calloc(sizeof(char *), newNumberOfTrees);
     for (int i = 0; i < newNumberOfTrees - 1; i++) {
         newArray[i] = (*newickTree)[i];
@@ -31,7 +43,7 @@ void extendCharArraybyTree(char ***newickTree, int newNumberOfTrees) {
     *newickTree = newArray;
 }
 
-void extenCharSize(char **oldChar, int fromSize, int toSize) {
+static void extenCharSize(char **oldChar, int fromSize, int toSize) {
     // extend to size + 1 (to have a terminal 0)
     char *newChar = calloc(sizeof(char), toSize + 1);
     for (int i = 0; i < fromSize; i++) {
@@ -55,7 +67,6 @@ void readFileToArray(const char *filename, char ***newickTree, int *numberOfTree
     
     // Set char array for first tree;
     *newickTree = (char **) calloc(sizeof(char *), 1);
-    int ignore = 0;
     // Read whole file
     while (fread(&c, sizeof(c), 1, f) == 1) {
         
@@ -84,7 +95,7 @@ void readFileToArray(const char *filename, char ***newickTree, int *numberOfTree
     fclose(f);
 }
 
-void addName(char *name, char ***allNames, int *currentLength) {
+static void addName(char *name, char ***allNames, int *currentLength) {
     int exists = 0;
     for (int i = 0; i < *currentLength; i++) {
         if (strcmp((*allNames)[i], name) == 0) {
@@ -107,18 +118,7 @@ void addName(char *name, char ***allNames, int *currentLength) {
     }
 }
 
-int isChar(char c) {
-    return (c == '_' || isalpha(c));
-}
-
-int isValue(char c) {
-    if (isdigit(c) || c == '.') {
-        return 1;
-    }
-    return 0;
-}
-
-int isTreeOperator(char c) {
+static int isTreeOperator(char c) {
     if (c == '(' || c == ')' || c == ',' || c == ':') {
         return 1;
     }
@@ -187,7 +187,7 @@ void newickTreeToTree(char *newickTree, struct node **tree, char ***allLeafNames
     
 }
 
-int maxDepth(struct node *current) {
+static int maxDepth(struct node *current) {
     int max = 1;
     if (current->firstChild != NULL) {
         max = maxDepth(current->firstChild) + 1;
@@ -201,7 +201,7 @@ int maxDepth(struct node *current) {
     return max;
 }
 
-void fillArray(char *array, struct node *current, int width, int offsetX, int offsetY) {
+static void fillArray(char *array, struct node *current, int width, int offsetX, int offsetY) {
     for (int i = 0; i < maxNameLength; i++) {
         array[offsetY * width * maxNameLength + offsetX * maxNameLength + i] = current->name[i];
     }

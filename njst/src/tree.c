@@ -5,10 +5,20 @@
 #include <stdio.h>
 #include <math.h>
 
+void freeTree(struct node *tree);
+static void copySubtree(struct node *from, struct node *at);
+static int check(char **names, int index1, int index2, int index3);
+static int subScoreAndTag(struct node *current, int *index, char **names);
+int scoreAndTag(struct node *tree);
+static void reRoot(struct node *atNode, struct node **best, int *bestScore);
+void tagAndRoot(struct node **tree);
+static void goingUp(int index, int numberOfLeaves, double dist, double **allDist, int size, double norm);
+static void goingDown(int index, int numberOfLeaves, double dist, double **allDist, double norm);
+void leafToLeafDistance(struct node *root, double **dist, char **name, int normDistance, int branchLength);
+
 void freeTree(struct node *tree) {
     struct node *before = tree;
     struct node *current = tree;
-    int didDelete = 1;
     int direction = 0;
     while (before != NULL) {
         
@@ -45,7 +55,7 @@ void freeTree(struct node *tree) {
     }
 }
 
-void copySubtree(struct node *from, struct node *at) {
+static void copySubtree(struct node *from, struct node *at) {
     //Copy subtree of new roots first child
     struct node *oldCurrent = from;
     struct node *newCurrent = at;
@@ -75,7 +85,7 @@ void copySubtree(struct node *from, struct node *at) {
     }
 }
 
-int check(char **names, int index1, int index2, int index3) {
+static int check(char **names, int index1, int index2, int index3) {
     
     // Score according to Astral-Pro tag procedure
     int score = 0;
@@ -113,7 +123,7 @@ int check(char **names, int index1, int index2, int index3) {
     return score;
 }
 
-int subScoreAndTag(struct node *current, int *index, char **names) {
+static int subScoreAndTag(struct node *current, int *index, char **names) {
     
     // Subroutine of tag procedure from Astral-Pro
     int score = 0;
@@ -143,7 +153,6 @@ int scoreAndTag(struct node *tree) {
     int index = 0;
     int score = 0;
     int size = tree->numberOfLeaves;
-    struct node *current = tree;
     char **names = (char **) calloc(sizeof(char *), size);
     for (int i = 0; i < size; i++) {
         names[i] = (char *) calloc(sizeof(char), maxNameLength);
@@ -156,7 +165,7 @@ int scoreAndTag(struct node *tree) {
     return score;
 }
 
-void reRoot(struct node *atNode, struct node **best, int *bestScore) {
+static void reRoot(struct node *atNode, struct node **best, int *bestScore) {
     
     struct node *oldCurrent = atNode;
     
@@ -214,7 +223,7 @@ void reRoot(struct node *atNode, struct node **best, int *bestScore) {
         oldCurrent = oldCurrent->parent;
     }
     
-    int size = compNumberOfLeaves(newRoot);
+    compNumberOfLeaves(newRoot);
     
     // Get score and tag new tree
     int thisScore = scoreAndTag(newRoot);
@@ -226,45 +235,6 @@ void reRoot(struct node *atNode, struct node **best, int *bestScore) {
     }
 }
 
-int checkIfSpeciesAppearsDouble(struct node *tree) {
-    // check if Species apears double:
-    char **names = calloc(sizeof(char *), tree->numberOfLeaves);
-    for (int i = 0; i < tree->numberOfLeaves; i++) {
-        names[i] = calloc(sizeof(char), maxNameLength);
-    }
-    int index = 0;
-    int appearsDouble = 0;
-    
-    // Traverse tree
-    struct node *current = tree;
-    while (1) {
-        while (current->firstChild != NULL) {
-            current = current->firstChild;
-        }
-        for (int i = 0; i < index; i++) {
-            if (strcmp(current->name, names[i]) == 0) {
-                appearsDouble = 1;
-                break;
-            }
-        }
-        strcpy(names[index], current->name);
-        if (index == tree->numberOfLeaves - 1) {
-            break;
-        }
-        while (current->nextSibling == NULL) {
-            current = current->parent;
-        }
-        current = current->nextSibling;
-        index++;
-    }
-    
-    for (int i = 0; i < tree->numberOfLeaves; i++) {
-        free(names[i]);
-    }
-    free(names);
-    return appearsDouble;
-}
-
 void tagAndRoot(struct node **tree) {
     // current position in original tree
     struct node *current = *tree;
@@ -272,12 +242,11 @@ void tagAndRoot(struct node **tree) {
     // pointer to tree with lowest
     struct node *best = *tree;
     int bestScore = scoreAndTag(*tree);
-    // if none species is double no need to reroot
-    if (checkIfSpeciesAppearsDouble(*tree) == 0) {
+    // if score is zero no need to reroot
+    if (bestScore == 0) {
         return;
     }
     // Travers tree and reRoot at every node
-    int i = 0;
     while (1) {
         while (current->firstChild != NULL) {
             current = current->firstChild;
@@ -300,7 +269,7 @@ void tagAndRoot(struct node **tree) {
     *tree = best;
 }
 
-void goingUp(int index, int numberOfLeaves, double dist, double **allDist, int size, double norm) {
+static void goingUp(int index, int numberOfLeaves, double dist, double **allDist, int size, double norm) {
     for (int i = index - numberOfLeaves + 1; i <= index; i++) {
         for (int j = index + 1; j < size; j++) {
             allDist[i][j - i] += dist / norm ;
@@ -308,7 +277,7 @@ void goingUp(int index, int numberOfLeaves, double dist, double **allDist, int s
     }
 }
 
-void goingDown(int index, int numberOfLeaves, double dist, double **allDist, double norm) {
+static void goingDown(int index, int numberOfLeaves, double dist, double **allDist, double norm) {
     for (int i = 0; i < index; i++) {
         for (int j = index; j < index + numberOfLeaves; j++) {
             allDist[i][j - i] += dist / norm;
@@ -317,7 +286,8 @@ void goingDown(int index, int numberOfLeaves, double dist, double **allDist, dou
 }
 
 
-void leafToLeafDistance(struct node *root, double **dist, int size, char **name, int normDistance, int branchLength) {
+void leafToLeafDistance(struct node *root, double **dist, char **name, int normDistance, int branchLength) {
+    int size = root->numberOfLeaves;
     int index = 0;
     struct node *current = root;
     double norm = 1;

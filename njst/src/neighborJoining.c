@@ -4,7 +4,13 @@
 #include "node.h"
 #include <limits.h>
 
-void calcQ(double**q, double **distance, int size) {
+static void calcQ(double**q, double **distance, int size);
+static void findMinOfQ(double **q, int size, int *i, int *j);
+static void join(int i, int j, struct node *root, int size, char name, double **distance);
+static void calcD(double **distance, double **newDistance, int size, int i, int j);
+void makeTreeFromDistanceArray(double **distance, int size, struct node **root, char **names);
+
+static void calcQ(double**q, double **distance, int size) {
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
             q[i][j] = (double) (size - 2) * distance[i][j];
@@ -20,7 +26,7 @@ void calcQ(double**q, double **distance, int size) {
     }
 }
 
-void findMinOfQ(double **q, int size, int *i, int *j) {
+static void findMinOfQ(double **q, int size, int *i, int *j) {
     double min = INT_MAX;
     for (int ii = 0; ii < size; ii++) {
         for (int jj = ii + 1; jj < size; jj++) {
@@ -33,8 +39,7 @@ void findMinOfQ(double **q, int size, int *i, int *j) {
     }
 }
 
-void join(int i, int j, struct node *root, int size, char
-          name, double **distance) {
+static void join(int i, int j, struct node *root, int size, char name, double **distance) {
     struct node *newNode = (struct node*) calloc(sizeof(struct node), 1);
     struct node *current = root->firstChild;
     root->firstChild = newNode;
@@ -78,7 +83,7 @@ void join(int i, int j, struct node *root, int size, char
     
 }
 
-void calcD(double **distance, double **newDistance, int size, int i, int j) {
+static void calcD(double **distance, double **newDistance, int size, int i, int j) {
     for (int ii = 0; ii < size; ii++) {
         for (int jj = 0; jj < size; jj++) {
             int adjustI = -1 + (ii > i) + (ii >= j);

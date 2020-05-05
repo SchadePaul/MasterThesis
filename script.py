@@ -11,8 +11,8 @@ outputName = "output"
 numberOfGeneTrees = 50
 nameOfDirectory = "test_" + str(numberOfGeneTrees)
 numberOfSets = 100
-numberOfLeaves = [15,25,50,75,100,150,200]
-legendNames = ["USTAR", "USTAR tagged"]
+numberOfLeaves = [15,25,50,75,100]
+legendNames = ["NJst", "NJst weighted", "NJst squared", "NJst branch length", "miniNJ", "miniNJ weighted", "tag", "tag and root", "ustar", "ustar tag"]
 fileResults = open("results", "w")
 exponentGeneTree = int(math.log10(numberOfGeneTrees))
 exponentSet = int(math.log10(numberOfSets))
@@ -24,6 +24,7 @@ exponentSet = int(math.log10(numberOfSets))
 allDistances = [[[0 for k in range (len(numberOfLeaves))] for j in range(len(legendNames))] for i in range(2)]
 for leaves in numberOfLeaves:
     distancesForSets = [[0 for j in range(numberOfSets)] for i in range(len(legendNames))]
+    print("++++++++ " + str(leaves) + " ++++++++")
     for set in range(1, numberOfSets + 1):
         print(set)
         stringFillerSet = ""
@@ -53,13 +54,30 @@ for leaves in numberOfLeaves:
 #            currentTime = int(round(time.time() * 1000))
         inputStr = nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + inputName
         outputStr = nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + outputName
+        
+        legendNames = ["NJst", "NJst weighted", "NJst squared", "NJst branch length", "miniNJ", "miniNJ weighted", "tag", "tag and root", "ustar", "ustar tag"]
 
-        cmd2 = subprocess.Popen(["./njst/main", "-u", "-i", inputStr, "-o", outputStr + "0"])
+        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "0"])
+        cmd2.communicate()
+        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "1", "-w"])
+        cmd2.communicate()
+        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "2", "-s"])
+        cmd2.communicate()
+        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "3", "-b"])
+        cmd2.communicate()
+        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "4", "-m"])
+        cmd2.communicate()
+        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "5", "-m", "-w"])
+        cmd2.communicate()
+        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "6", "-t"])
+        cmd2.communicate()
+        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "7", "-t", "-r"])
+        cmd2.communicate()
+        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "8", "-u"])
+        cmd2.communicate()
+        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "9", "-u", "-t"])
         cmd2.communicate()
         
-        cmd2 = subprocess.Popen(["./njst/main", "-u", "-t", "-i", inputStr, "-o", outputStr + "1"])
-        cmd2.communicate()
-
         fileSpeciesTree = open(nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/s_tree.trees", "r")
         strFileSpeciesTree = fileSpeciesTree.read()
         fileSpeciesTree.close()
