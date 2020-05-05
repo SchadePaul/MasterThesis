@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
     struct node *speciestree = (struct node*) calloc(sizeof(struct node), 1);
     
     if (doustar) {
-        ustar(&speciestree, input);
+        ustar(&speciestree, input, tagged);
     } else {
         if (tagged) {
             taggedNJFromFile(&speciestree, input, norm, root, weighted, square);
