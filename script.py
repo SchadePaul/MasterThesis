@@ -8,11 +8,11 @@ import matplotlib.pyplot as plt
 
 inputName = "allTrees"
 outputName = "output"
-numberOfGeneTrees = 100
+numberOfGeneTrees = 50
 nameOfDirectory = "test_" + str(numberOfGeneTrees)
 numberOfSets = 100
 numberOfLeaves = [15,25,50,75,100,150,200]
-legendNames = ["tagged", "tagged and squared", "NJst", "NJst squared"]
+legendNames = ["NJst", "miniNJ", "uSTAR"]
 fileResults = open("results", "w")
 exponentGeneTree = int(math.log10(numberOfGeneTrees))
 exponentSet = int(math.log10(numberOfSets))
@@ -54,16 +54,13 @@ for leaves in numberOfLeaves:
         inputStr = nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + inputName
         outputStr = nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + outputName
         
-        cmd2 = subprocess.Popen(["./njst/main", "-t", "-i", inputStr, "-o", outputStr + "0"])
+        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "0"])
         cmd2.communicate()
 
-        cmd2 = subprocess.Popen(["./njst/main", "-t", "-s", "-i", inputStr, "-o", outputStr + "1"])
+        cmd2 = subprocess.Popen(["./njst/main", "-m", "-i", inputStr, "-o", outputStr + "1"])
         cmd2.communicate()
 
-        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "2"])
-        cmd2.communicate()
-
-        cmd2 = subprocess.Popen(["./njst/main", "-s", "-i", inputStr, "-o", outputStr + "3"])
+        cmd2 = subprocess.Popen(["./njst/main", "-u", "-i", inputStr, "-o", outputStr + "2"])
         cmd2.communicate()
 
         fileSpeciesTree = open(nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/s_tree.trees", "r")
