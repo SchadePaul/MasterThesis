@@ -286,7 +286,7 @@ void ustar(struct node **root, const char *filename) {
     for (int i = 0; i < numberOfLeafNames; i++) {
         allLeafDistances[i] = (double **) calloc(sizeof(double *), numberOfLeafNames);
         for (int j = 0; j < numberOfLeafNames; j++) {
-            allLeafDistances[i][j] = (double *) calloc(sizeof(double *), numberOfTrees + 1);
+            allLeafDistances[i][j] = (double *) calloc(sizeof(double *), 2 * numberOfTrees);
         }
     }
     
@@ -332,8 +332,8 @@ void ustar(struct node **root, const char *filename) {
                     jj = tmp;
                 }
                 
-                allLeafDistances[ii][jj][i + 1] += dist[j][k];
-                allLeafDistances[ii][jj][0] += 1;
+                allLeafDistances[ii][jj][2 * i + 1] += dist[j][k];
+                allLeafDistances[ii][jj][2 * i] += 1;
                 
             }
         }
@@ -359,13 +359,12 @@ void ustar(struct node **root, const char *filename) {
                 int kMax = numberOfTrees;
                 int count = 0;
                 for (int k = 0; k < kMax; k++) {
-                    if (allLeafDistances[i][j][k + 1] != 0) {
-                        distance[i][j] += allLeafDistances[i][j][k + 1];
+                    if (allLeafDistances[i][j][2 * k] != 0) {
+                        distance[i][j] += allLeafDistances[i][j][2 * k + 1] / allLeafDistances[i][j][2 * k];
                         count++;
                     }
                 }
-                if (allLeafDistances[i][j][0] != 0) {
-                    distance[i][j] = distance[i][j] / allLeafDistances[i][j][0];
+                if (count != 0) {
                     distance[i][j] = distance[i][j] / count;
                 }
             } else {
