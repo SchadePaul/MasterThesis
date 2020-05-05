@@ -274,7 +274,7 @@ void miniNJFromFile(struct node **root, const char *filename, int norm, int weig
 
 }
 
-void ustar(struct node **root, const char *filename, int tag) {
+void ustar(struct node **root, const char *filename, int tag, int rooted) {
     int numberOfTrees;
     char **allLeafNames;
     int numberOfLeafNames = 0;
@@ -291,12 +291,15 @@ void ustar(struct node **root, const char *filename, int tag) {
     }
     
     for (int i = 0; i < numberOfTrees; i++) {
-        // Number of Leaves in this tree
-        int size = tree[i]->numberOfLeaves;
         
-        if (tag == 1) {
+        if (rooted) {
+            tagAndRoot(&(tree[i]));
+        } else if (tag) {
             scoreAndTag(tree[i]);
         }
+
+        // Number of Leaves in this tree
+        int size = tree[i]->numberOfLeaves;
         
         // Half-Matrix for distances between leaves
         double **dist = (double **) calloc(sizeof(double *), size);
