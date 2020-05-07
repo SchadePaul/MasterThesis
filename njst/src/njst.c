@@ -28,11 +28,10 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
             taxaDistances[i][j] = (double *) calloc(sizeof(double), (size_t) numberOfTrees * 2);
         }
     }
-    
     for (int i = 0; i < numberOfTrees; i++) {
         // Prework on the trees
-        if (root) {
-            tagAndRoot(&(trees[i]));
+        if (root == 1) {
+            tagAndRoot(trees[i]);
         }
         if (tag) {
             scoreAndTag(trees[i]);

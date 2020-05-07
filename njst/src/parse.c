@@ -21,6 +21,7 @@ void printTree(struct node *tree);
 void saveTree(struct node *tree, const char *name);
 
 int compNumberOfLeaves(struct node *current) {
+    int id = current->idNo;
     int num = 0;
     if (current->firstChild != NULL) {
         num = compNumberOfLeaves(current->firstChild);
@@ -133,6 +134,9 @@ void newickTreeToTree(char *newickTree, struct node **tree, char ***allLeafNames
     int readingValue = 0;
     (*tree) = (struct node *) calloc(sizeof(struct node), 1);
     struct node *current = (*tree);
+    int id = 0;
+    current->idNo = id;
+    id++;
     char *value = calloc(sizeof(char), maxValueLength);
     
     // Only add names of leaves
@@ -162,10 +166,14 @@ void newickTreeToTree(char *newickTree, struct node **tree, char ***allLeafNames
                 current->firstChild = (struct node*) calloc(sizeof(struct node), 1);
                 current->firstChild->parent = current;
                 current = current->firstChild;
+                current->idNo = id;
+                id++;
             } else if (c == ',') {
                 current->nextSibling = (struct node*) calloc(sizeof(struct node), 1);
                 current->nextSibling->parent = current->parent;
                 current = current->nextSibling;
+                current->idNo = id;
+                id++;
                 dontAddNextName = 0;
             } else if (c == ')') {
                 current = current->parent;
