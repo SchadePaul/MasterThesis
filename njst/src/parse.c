@@ -21,7 +21,6 @@ void printTree(struct node *tree);
 void saveTree(struct node *tree, const char *name);
 
 int compNumberOfLeaves(struct node *current) {
-    int id = current->idNo;
     int num = 0;
     if (current->firstChild != NULL) {
         num = compNumberOfLeaves(current->firstChild);

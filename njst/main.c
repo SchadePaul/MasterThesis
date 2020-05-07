@@ -53,6 +53,9 @@ int main(int argc, char **argv) {
             case 'u':
                 ustar = 1;
                 break;
+            default:
+                printf("unexpected input: \n%s\n", optarg);
+                break;
         }
     }
 
