@@ -21,15 +21,21 @@ void printTree(struct node *tree);
 void saveTree(struct node *tree, const char *name);
 
 int compNumberOfLeaves(struct node *current) {
-    int num = 0;
-    if (current->firstChild != NULL) {
-        num = compNumberOfLeaves(current->firstChild);
-    } else {
-        num = 1;
+    int num = current->numberOfLeaves;
+    if (num == 0) {
+        if (current->firstChild != NULL) {
+            num = compNumberOfLeaves(current->firstChild);
+        } else {
+            num = 1;
+        }
+        current->numberOfLeaves = num;
     }
-    current->numberOfLeaves = num;
     if (current->nextSibling != NULL) {
-        num += compNumberOfLeaves(current->nextSibling);
+        int add = current->nextSibling->numberOfLeaves;
+        if (add == 0) {
+            add = compNumberOfLeaves(current->nextSibling);
+        }
+        num += add;
     }
     return num;
 }

@@ -9,8 +9,8 @@ import os
 
 inputName = "allTrees"
 outputName = "output"
-numberOfGeneTrees = 50
-nameOfDirectory = "test_" + str(numberOfGeneTrees)
+numberOfGeneTrees = 100
+nameOfDirectory = "Simphy/test_" + str(numberOfGeneTrees)
 numberOfSets = 100
 numberOfLeaves = [15,25,50,75,100,150,200]
 legendNames = ["tag", "tag and root"]
@@ -73,7 +73,7 @@ for leaves in numberOfLeaves:
             fileOutputTree = open(nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + outputName + str(i), "r")
             strFileOutputTree = fileOutputTree.read()
             fileOutputTree.close()
-            os.delete(nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + outputName + str(i))
+            os.remove(nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + outputName + str(i))
             dataSet.read(data=strFileOutputTree, schema = "newick", taxon_namespace=dataSet.tree_lists[0].taxon_namespace)
             distancesForSets[i][set - 1] = dendropy.calculate.treecompare.symmetric_difference(dataSet.tree_lists[0][0], dataSet.tree_lists[i + 1][0], is_bipartitions_updated=False) / (2 * len(dataSet.tree_lists[0].taxon_namespace) - 6)
     for i in range(len(legendNames)):

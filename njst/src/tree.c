@@ -4,11 +4,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <limits.h>
 
 void freeTree(struct node *tree);
 //static void copySubtree(struct node *from, struct node *at);
-static int check(char **names, int index1, int index2, int index3);
-static int subScoreAndTag(struct node *current, int *index, char **names);
+static int check(char **names, int index1, int index2, int index3, int *aInB, int *bInA);
+static int subScoreAndTag(struct node *current, int *index, char **names, int *aInB, int *bInA);
 int scoreAndTag(struct node *tree, char **names);
 //static void reRoot(struct node *atNode, struct node **best, int *bestScore);
 void tagAndRoot(struct node *tree);
@@ -69,37 +70,40 @@ void freeTree(struct node *tree) {
     }
 }
 
-static int check(char **names, int index1, int index2, int index3) {
+static int check(char **names, int index1, int index2, int index3, int *aInB, int *bInA) {
     
     // Score according to Astral-Pro tag procedure
     int score = 0;
-    int aInB = 0;
-    int bInA = 0;
+    int aInBCount = 0;
+    int bInACount = 0;
+    
     for (int i = index1; i < index2; i++) {
         for (int j = index2; j <= index3; j++) {
-            if (strcmp(names[i], names[j]) == 0) {
-                aInB++;
-                break;
+            if (aInB[i - index1] == 0 || bInA[j - index2] == 0) {
+                if (strcmp(names[i], names[j]) == 0) {
+                    aInB[i - index1] = 1;
+                    bInA[j - index2] = 1;
+                }
             }
         }
     }
-    for (int i = index2; i <= index3; i++) {
-        for (int j = index1; j < index2; j++) {
-            if (strcmp(names[i],names[j]) == 0) {
-                bInA++;
-                break;
-            }
-        }
+    for (int i = 0; i < (index2 - index1); i++) {
+        aInBCount += aInB[i];
+        aInB[i] = 0;
     }
-    if (aInB == (index2 - index1)) {
-        if (bInA == (index3 - index2 + 1)) {
+    for (int i = 0; i < (index3 - index2 + 1); i++) {
+        bInACount += bInA[i];
+        bInA[i] = 0;
+    }
+    if (aInBCount == (index2 - index1)) {
+        if (bInACount == (index3 - index2 + 1)) {
             score = 1;
         } else {
             score = 2;
         }
-    } else if (bInA == (index3 - index2 + 1)) {
+    } else if (bInACount == (index3 - index2 + 1)) {
         score = 2;
-    } else if (aInB == 0 && bInA == 0){
+    } else if (aInBCount == 0 && bInACount == 0){
         score = 0;
     } else {
         score = 3;
@@ -108,12 +112,12 @@ static int check(char **names, int index1, int index2, int index3) {
 }
 
 
-static int subScoreAndTag(struct node *current, int *index, char **names) {
+static int subScoreAndTag(struct node *current, int *index, char **names, int *aInB, int *bInA) {
     int score = 0;
     if (current->firstChild != 0) {
         struct node *this = current->firstChild;
         int index1 = *index;
-        score += subScoreAndTag(this, index, names);
+        score += subScoreAndTag(this, index, names, aInB, bInA);
         struct node *next = this->nextSibling;
         int a = 0;
         while (1) {
@@ -122,10 +126,10 @@ static int subScoreAndTag(struct node *current, int *index, char **names) {
             }
             *index += 1;
             int index2 = *index;
-            score += subScoreAndTag(next, index, names);
+            score += subScoreAndTag(next, index, names, aInB, bInA);
             int index3 = *index;
             if (current->score == 0) {
-                int checker = check(names, index1, index2, index3);
+                int checker = check(names, index1, index2, index3, aInB, bInA);
                 if (checker != 0) {
                     score += checker;
                     current->tag = 1;
@@ -155,7 +159,11 @@ int scoreAndTag(struct node *tree, char **names) {
     // Tag procedre from Astral-Pro
     int index = 0;
     int score = 0;
-    score = subScoreAndTag(tree, &index, names);
+    int *aInB = (int *) calloc(sizeof(int), tree->numberOfLeaves);
+    int *bInA = (int *) calloc(sizeof(int), tree->numberOfLeaves);
+    score = subScoreAndTag(tree, &index, names, aInB, bInA);
+    free(aInB);
+    free(bInA);
     return score;
 }
 
@@ -191,6 +199,7 @@ static void reRoot2(struct node *tree, struct node *root) {
         current->nextSibling = currentSibling->parent;
         current->nextSibling->score = 0;
         current->nextSibling->tag = 0;
+        current->nextSibling->numberOfLeaves = 0;
         current->nextSibling->parent = toParent;
         while (1) {
             current = tmpCurrent;
@@ -243,6 +252,7 @@ static void reRoot2(struct node *tree, struct node *root) {
             current->parent = toParent;
             current->score = 0;
             current->tag = 0;
+            current->numberOfLeaves = 0;
             currentSibling = toParent->firstChild;
             while (currentSibling->nextSibling != 0) {
                 currentSibling = currentSibling->nextSibling;
@@ -256,6 +266,7 @@ static void reRoot2(struct node *tree, struct node *root) {
         root->firstChild->nextSibling->parent = root;
         root->score = 0;
         root->tag = 0;
+        root->numberOfLeaves = 0;
         free(newRoot);
         compNumberOfLeaves(root);
     }
@@ -264,8 +275,8 @@ static void reRoot2(struct node *tree, struct node *root) {
 
 void tagAndRoot(struct node *tree) {
     struct node *current = tree;
-    int bestScore = 9999999;
-    int score = 999999;
+    int bestScore = INT_MAX;;
+    int score = INT_MAX;;
     int bestId = 0;
     int id = 1;
     int maxId = compNumberOfNodes(tree);

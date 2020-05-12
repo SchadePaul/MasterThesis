@@ -27,7 +27,7 @@ static void calcQ(double**q, double **distance, int size) {
 }
 
 static void findMinOfQ(double **q, int size, int *i, int *j) {
-    double min = INT_MAX;
+    double min = (double) INT_MAX;
     for (int ii = 0; ii < size; ii++) {
         for (int jj = ii + 1; jj < size; jj++) {
             if(q[ii][jj] < min) {
