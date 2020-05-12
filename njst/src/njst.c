@@ -29,15 +29,24 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
         }
     }
     for (int i = 0; i < numberOfTrees; i++) {
+        // Number of Leaves in this tree
+        int size = trees[i]->numberOfLeaves;
         // Prework on the trees
         if (root == 1) {
             tagAndRoot(trees[i]);
         }
         if (tag) {
-            scoreAndTag(trees[i]);
+            char **names = (char **) calloc(sizeof(char *), size);
+            for (int j = 0; j < size; j++) {
+                names[j] = (char *) calloc(sizeof(char), maxNameLength);
+            }
+            scoreAndTag(trees[i], names);
+            for (int j = 0; j < size; j++) {
+                free(names[j]);
+            }
+            free(names);
         }
-        // Number of Leaves in this tree
-        int size = trees[i]->numberOfLeaves;
+        
         
         // Set weight factor
         int weightFactor = 1;
