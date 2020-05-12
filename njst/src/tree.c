@@ -9,7 +9,7 @@ void freeTree(struct node *tree);
 //static void copySubtree(struct node *from, struct node *at);
 static int check(char **names, int index1, int index2, int index3);
 static int subScoreAndTag(struct node *current, int *index, char **names);
-int scoreAndTag(struct node *tree);
+int scoreAndTag(struct node *tree, char **names);
 //static void reRoot(struct node *atNode, struct node **best, int *bestScore);
 void tagAndRoot(struct node *tree);
 static void goingUp(int index, int numberOfLeaves, double dist, double **allDist, int size, double norm);
@@ -151,21 +151,11 @@ static int subScoreAndTag(struct node *current, int *index, char **names) {
     return score;
 }
 
-int scoreAndTag(struct node *tree) {
-    
+int scoreAndTag(struct node *tree, char **names) {
     // Tag procedre from Astral-Pro
     int index = 0;
     int score = 0;
-    int size = tree->numberOfLeaves;
-    char **names = (char **) calloc(sizeof(char *), size);
-    for (int i = 0; i < size; i++) {
-        names[i] = (char *) calloc(sizeof(char), maxNameLength);
-    }
     score = subScoreAndTag(tree, &index, names);
-    for (int i = 0; i < size; i++) {
-        free(names[i]);
-    }
-    free(names);
     return score;
 }
 
@@ -275,21 +265,33 @@ static void reRoot2(struct node *tree, struct node *root) {
 void tagAndRoot(struct node *tree) {
     struct node *current = tree;
     int bestScore = 9999999;
+    int score = 999999;
     int bestId = 0;
     int id = 1;
     int maxId = compNumberOfNodes(tree);
+    int size = tree->numberOfLeaves;
+    char **names = (char **) calloc(sizeof(char *), size);
+    for (int i = 0; i < size; i++) {
+        names[i] = (char *) calloc(sizeof(char), maxNameLength);
+    }
     while (id < maxId) {
         while (current->firstChild != 0) {
             current = current->firstChild;
             if (current->idNo == id) {
                 reRoot2(current, tree);
-                int score = scoreAndTag(tree);
+                score = scoreAndTag(tree, names);
                 if (score < bestScore) {
                     bestScore = score;
                     bestId = id;
                 }
                 id++;
+                if (score == 0) {
+                    break;
+                }
             }
+        }
+        if (score == 0) {
+            break;
         }
         while (current->nextSibling == 0) {
             current = current->parent;
@@ -301,7 +303,7 @@ void tagAndRoot(struct node *tree) {
             current = current->nextSibling;
             if (current->idNo == id) {
                 reRoot2(current, tree);
-                int score = scoreAndTag(tree);
+                score = scoreAndTag(tree, names);
                 if (score < bestScore) {
                     bestScore = score;
                     bestId = id;
@@ -310,31 +312,34 @@ void tagAndRoot(struct node *tree) {
             }
         }
     }
-    if (current->score != bestScore) {
-        while (1) {
-                while (current->firstChild != 0) {
-                    current = current->firstChild;
-                    if (current->idNo == bestId) {
-                        reRoot2(current, tree);
-                        scoreAndTag(tree);
-                        break;
-                    }
-                }
-                if (tree->firstChild->idNo == bestId) {
-                    break;
-                }
-                while (current->nextSibling == 0) {
-                    current = current->parent;
-                }
-                current = current->nextSibling;
-                if (current->idNo == bestId) {
-                    reRoot2(current, tree);
-                    scoreAndTag(tree);
-                    break;
-                }
+    current = tree;
+    while (score != 0) {
+        while (current->firstChild != 0) {
+            current = current->firstChild;
+            if (current->idNo == bestId) {
+                reRoot2(current, tree);
+                scoreAndTag(tree, names);
+                break;
             }
+        }
+        if (tree->firstChild->idNo == bestId) {
+            break;
+        }
+        while (current->nextSibling == 0) {
+            current = current->parent;
+        }
+        current = current->nextSibling;
+        if (current->idNo == bestId) {
+            reRoot2(current, tree);
+            scoreAndTag(tree, names);
+            break;
+        }
     }
     compNumberOfLeaves(tree);
+    for (int i = 0; i < size; i++) {
+        free(names[i]);
+    }
+    free(names);
 }
 
 
