@@ -153,6 +153,7 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
                 }
                 fprintf(f, "%d\t", count);
             } else {
+		fprintf(f, "\t");
                 distance[i][j] = distance[j][i];
             }
         }
