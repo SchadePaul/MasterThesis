@@ -121,14 +121,6 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
         distance[i] = (double *) calloc(sizeof(double), numberOfTaxa);
     }
     
-    FILE *f;
-    
-    if (mini == 1) {
-        f = fopen("mini", "w");
-    } else {
-        f = fopen("not_tagged", "w");
-    }
-    
     for (int i = 0; i < numberOfTaxa; i++) {
         for (int j = 0; j < numberOfTaxa; j++) {
             if (i < j) {
@@ -151,15 +143,12 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
                 if (count != 0) {
                     distance[i][j] = distance[i][j] / count;
                 }
-                fprintf(f, "%d\t", count);
             } else {
-		fprintf(f, "\t");
                 distance[i][j] = distance[j][i];
             }
         }
-        fprintf(f, "\n");
     }
-    fclose(f);
+
     makeTreeFromDistanceArray(distance, numberOfTaxa, speciesTree, taxa);
     
     for (int i = 0; i < numberOfTaxa; i++) {
