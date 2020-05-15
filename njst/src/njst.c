@@ -123,8 +123,8 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
     
     FILE *f;
     
-    if (tag == 1) {
-        f = fopen("tagged", "w");
+    if (mini == 1) {
+        f = fopen("mini", "w");
     } else {
         f = fopen("not_tagged", "w");
     }
