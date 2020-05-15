@@ -21,27 +21,23 @@ void printTree(struct node *tree);
 void saveTree(struct node *tree, const char *name);
 
 int compNumberOfLeaves(struct node *current) {
-    int num = current->numberOfLeaves;
-    if (num == 0) {
-        if (current->firstChild != NULL) {
-            num = compNumberOfLeaves(current->firstChild);
-        } else {
-            num = 1;
+    int num = 0;
+    if (current->firstChild != NULL) {
+        struct node *workOn = current->firstChild;
+        num = compNumberOfLeaves(workOn);
+        while (workOn->nextSibling != NULL) {
+            num += compNumberOfLeaves(workOn->nextSibling);
+            workOn = workOn->nextSibling;
         }
-        current->numberOfLeaves = num;
+    } else {
+        num = 1;
     }
-    if (current->nextSibling != NULL) {
-        int add = current->nextSibling->numberOfLeaves;
-        if (add == 0) {
-            add = compNumberOfLeaves(current->nextSibling);
-        }
-        num += add;
-    }
+    current->numberOfLeaves = num;
     return num;
 }
 
 static void extendCharArraybyTree(char ***newickTree, int newNumberOfTrees) {
-    char **newArray = calloc(sizeof(char *), newNumberOfTrees);
+    char **newArray = (char **) calloc(sizeof(char *), newNumberOfTrees);
     for (int i = 0; i < newNumberOfTrees - 1; i++) {
         newArray[i] = (*newickTree)[i];
     }
@@ -51,7 +47,7 @@ static void extendCharArraybyTree(char ***newickTree, int newNumberOfTrees) {
 
 static void extenCharSize(char **oldChar, int fromSize, int toSize) {
     // extend to size + 1 (to have a terminal 0)
-    char *newChar = calloc(sizeof(char), toSize + 1);
+    char *newChar = (char *) calloc(sizeof(char), toSize + 1);
     for (int i = 0; i < fromSize; i++) {
         newChar[i] = (*oldChar)[i];
     }
@@ -114,7 +110,7 @@ static void addName(char *name, char ***allNames, int *currentLength) {
         for (int i = 0; i < *currentLength; i++) {
             new[i] = (*allNames)[i];
         }
-        new[*currentLength] = (char*) calloc(sizeof(char), strlen(name));
+        new[*currentLength] = (char*) calloc(sizeof(char), strlen(name) + 1);
         strcpy(new[*currentLength], name);
         if (*currentLength > 1) {
             free(*allNames);
