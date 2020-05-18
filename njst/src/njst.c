@@ -79,32 +79,166 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
                 }
             }
         }
-        for (int j = 0; j < size; j++) {
-            for (int k = 0; k < size - j; k++) {
-                if (dist[j][k] > 0) {
-                    int ii = indexInTaxa[j];
-                    int jj = indexInTaxa[k + j];
-                    if (jj < ii) {
-                        int tmp = ii;
-                        ii = jj;
-                        jj = tmp;
-                    }
-                    double currentDistance = dist[j][k];
-                    if (square == 1) {
-                        currentDistance = pow(dist[j][k], 2.0);
-                    }
-                    if (mini) {
-                        if (taxaDistances[ii][jj][2 * i + 1] > currentDistance * weightFactor) {
-                            taxaDistances[ii][jj][2 * i + 1] = currentDistance * weightFactor;
-                        } else if (taxaDistances[ii][jj][2 * i + 1] == 0) {
-                            taxaDistances[ii][jj][2 * i + 1] = currentDistance * weightFactor;
-                            taxaDistances[ii][jj][2 * i] = 1 * weightFactor;
+        
+        // miniPairs
+        if (1 == 1) {
+            int **allIndices = (int **) calloc(sizeof(int *), size);
+            int *indexInMinDiances = (int *) calloc(sizeof(int), size);
+            int numberOfDifferentTaxa = 0;
+            for (int j = 0; j < size; j++) {
+                allIndices[j] = (int *) calloc(sizeof(int), 2);
+                for (int k = 0; k <= j; k++) {
+                    if (allIndices[k][0] == indexInTaxa[j]) {
+                        if (allIndices[k][1] == 0) {
+                            numberOfDifferentTaxa += 1;
                         }
-                    } else {
-                        taxaDistances[ii][jj][2 * i + 1] += currentDistance * weightFactor;
-                        taxaDistances[ii][jj][2 * i] += 1 * weightFactor;
+                        allIndices[k][1] += 1;
+                        indexInMinDiances[j] = k;
+                        break;
+                    } else if (allIndices[k][0] == 0 && allIndices[k][1] == 0) {
+                        numberOfDifferentTaxa += 1;
+                        allIndices[k][0] = indexInTaxa[j];
+                        allIndices[k][1] = 1;
+                        indexInMinDiances[j] = k;
+                        break;
                     }
                 }
+            }
+                    
+            int ***minDistances = (int ***) calloc(sizeof(int **), numberOfDifferentTaxa);
+            for (int j = 0; j < numberOfDifferentTaxa; j++) {
+                minDistances[j] = (int **) calloc(sizeof(int *), numberOfDifferentTaxa);
+                for (int k = 0; k < numberOfDifferentTaxa; k++) {
+                    minDistances[j][k] = (int *) calloc(sizeof(int *), 3);
+                }
+            }
+            int adddd = 0;
+            while (adddd == 0) {
+                adddd = 1;
+                
+//                if (i == 9) {
+//                    printf("\t");
+//                    for (int j = 0; j < size; j++) {
+//                        printf("%s\t", taxaInTree[j]);
+//                    }
+//                    printf("\n\n");
+//                    for (int j = 0; j < size; j++) {
+//                        printf("%s\t", taxaInTree[j]);
+//                        for (int k = 0; k < size; k++) {
+//                            if (j < k) {
+//                                printf("%d\t", (int) dist[j][k - j]);
+//                            } else {
+//                                printf("0\t");
+//                            }
+//                        }
+//                        printf("\n");
+//                    }
+//                    printf("\n");
+//                }
+                
+                
+                for (int j = 0; j < size; j++) {
+                    for (int k = 0; k < size - j; k++) {
+                        if (dist[j][k] > 0) {
+                            int ii = indexInMinDiances[j];
+                            int jj = indexInMinDiances[k + j];
+                            if (ii == jj) {
+                                continue;
+                            }
+                            if (jj < ii) {
+                                int tmp = jj;
+                                jj = ii;
+                                ii = tmp;
+                            }
+                            if (minDistances[ii][jj][2] == 0) {
+                                minDistances[ii][jj][0] = j;
+                                minDistances[ii][jj][1] = k + j;
+                                minDistances[ii][jj][2] = dist[j][k];
+                            } else if (dist[j][k] < minDistances[ii][jj][2]) {
+                                minDistances[ii][jj][0] = j;
+                                minDistances[ii][jj][1] = k + j;
+                                minDistances[ii][jj][2] = dist[j][k];
+                            }
+                        }
+                    }
+                }
+                for (int j = 0; j < numberOfDifferentTaxa; j++) {
+                    for (int k = 0; k < numberOfDifferentTaxa; k++) {
+                        int ii = allIndices[j][0];
+                        int jj = allIndices[k][0];
+                        if (jj < ii) {
+                            int tmp = jj;
+                            jj = ii;
+                            ii = tmp;
+                        }
+                        if (minDistances[j][k][2] != 0 && j != k) {
+                            adddd = 0;
+                            taxaDistances[ii][jj][2 * i] += 1;
+                            taxaDistances[ii][jj][2 * i + 1] += minDistances[j][k][2];
+                            for (int l = 0; l < size; l++) {
+                                for (int m = 0; m < size - l; m++) {
+                                    if ((l == minDistances[j][k][0] && indexInTaxa[m + l] == indexInTaxa[minDistances[j][k][1]]) || (m + l == minDistances[j][k][1] && indexInTaxa[l] == indexInTaxa[minDistances[j][k][0]]) || (l == minDistances[j][k][1] && indexInTaxa[m + l] == indexInTaxa[minDistances[j][k][0]]) || (m + l == minDistances[j][k][0] && indexInTaxa[l] == indexInTaxa[minDistances[j][k][1]])) {
+//                                        if (i == 9) {
+//                                            printf("delete: %d, %d\t", l, m + l);
+//                                        }
+                                        dist[l][m] = 0;
+                                    }
+                                }
+                            }
+//                            if (i == 9) {
+//                                printf("\n");
+//                            }
+                            minDistances[j][k][0] = 0;
+                            minDistances[j][k][1] = 0;
+                            minDistances[j][k][2] = 0;
+                        }
+                    }
+                }
+            }
+        } else {
+            for (int j = 0; j < size; j++) {
+                for (int k = 0; k < size - j; k++) {
+                    if (dist[j][k] > 0) {
+                        int ii = indexInTaxa[j];
+                        int jj = indexInTaxa[k + j];
+                        if (jj < ii) {
+                            int tmp = ii;
+                            ii = jj;
+                            jj = tmp;
+                        }
+                        double currentDistance = dist[j][k];
+                        if (square == 1) {
+                            currentDistance = pow(dist[j][k], 2.0);
+                        }
+                        if (mini) {
+                            if (taxaDistances[ii][jj][2 * i + 1] > currentDistance * weightFactor) {
+                                taxaDistances[ii][jj][2 * i + 1] = currentDistance * weightFactor;
+                            } else if (taxaDistances[ii][jj][2 * i + 1] == 0) {
+                                taxaDistances[ii][jj][2 * i + 1] = currentDistance * weightFactor;
+                                taxaDistances[ii][jj][2 * i] = 1 * weightFactor;
+                            }
+                        } else {
+                            taxaDistances[ii][jj][2 * i + 1] += currentDistance * weightFactor;
+                            taxaDistances[ii][jj][2 * i] += 1 * weightFactor;
+                        }
+                    }
+                }
+            }
+            
+            if (i == 9) {
+                printf("\t");
+                for (int j = 0; j < numberOfTaxa; j++) {
+                    printf("%s\t", taxa[j]);
+                }
+                printf("\n");
+                for (int j = 0; j < numberOfTaxa; j++) {
+                    printf("%s\t", taxa[j]);
+                    for (int k = 0; k < numberOfTaxa; k++) {
+                        printf("%d\t", (int) taxaDistances[j][k][2 * i + 1]);
+                    }
+                    printf("\n");
+                }
+                printf("\n");
             }
         }
         for (int j = 0; j < size; j++) {

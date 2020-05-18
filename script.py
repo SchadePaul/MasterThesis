@@ -9,11 +9,11 @@ import os
 
 inputName = "allTrees"
 outputName = "output"
-numberOfGeneTrees = 100
+numberOfGeneTrees = 50
 nameOfDirectory = "Simphy/test_" + str(numberOfGeneTrees)
 numberOfSets = 100
-numberOfLeaves = [15,25,50,75,100,150,200]
-legendNames = ["tag", "tag and root"]
+numberOfLeaves = [15,25,50]
+legendNames = ["mini"]
 fileResults = open("results", "w")
 exponentGeneTree = int(math.log10(numberOfGeneTrees))
 exponentSet = int(math.log10(numberOfSets))
@@ -56,10 +56,10 @@ for leaves in numberOfLeaves:
         inputStr = nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + inputName
         outputStr = nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + outputName
 
-        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "0", "-t"])
+        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "0"])
         cmd2.communicate()
-        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "1", "-t" , "-r"])
-        cmd2.communicate()
+#        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "1", "-t" , "-r"])
+#        cmd2.communicate()
         
         fileSpeciesTree = open(nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/s_tree.trees", "r")
         strFileSpeciesTree = fileSpeciesTree.read()
