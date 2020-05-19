@@ -9,9 +9,9 @@
 #include <math.h>
 
 static void readFileToTrees(struct node ***trees, const char *filename, int *numberOfTrees, char ***allLeafNames, int *numberOfLeafNames);
-void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root);
+void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, int miniPairs);
 
-void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root) {
+void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, int miniPairs) {
     // Read file and get important data (#Trees, #Taxa, Taxa)
     int numberOfTrees = 0;
     char **taxa;
@@ -28,6 +28,9 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
             taxaDistances[i][j] = (double *) calloc(sizeof(double), (size_t) numberOfTrees * 2);
         }
     }
+    
+    int counterAccept = 0;
+    int counterDecline = 0;
     for (int i = 0; i < numberOfTrees; i++) {
         // Number of Leaves in this tree
         int size = trees[i]->numberOfLeaves;
@@ -81,7 +84,7 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
         }
         
         // miniPairs
-        if (1 == 1) {
+        if (miniPairs == 1) {
             int **allIndices = (int **) calloc(sizeof(int *), size);
             int *indexInMinDiances = (int *) calloc(sizeof(int), size);
             int numberOfDifferentTaxa = 0;
@@ -115,28 +118,6 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
             int adddd = 0;
             while (adddd == 0) {
                 adddd = 1;
-                
-//                if (i == 9) {
-//                    printf("\t");
-//                    for (int j = 0; j < size; j++) {
-//                        printf("%s\t", taxaInTree[j]);
-//                    }
-//                    printf("\n\n");
-//                    for (int j = 0; j < size; j++) {
-//                        printf("%s\t", taxaInTree[j]);
-//                        for (int k = 0; k < size; k++) {
-//                            if (j < k) {
-//                                printf("%d\t", (int) dist[j][k - j]);
-//                            } else {
-//                                printf("0\t");
-//                            }
-//                        }
-//                        printf("\n");
-//                    }
-//                    printf("\n");
-//                }
-                
-                
                 for (int j = 0; j < size; j++) {
                     for (int k = 0; k < size - j; k++) {
                         if (dist[j][k] > 0) {
@@ -173,21 +154,20 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
                         }
                         if (minDistances[j][k][2] != 0 && j != k) {
                             adddd = 0;
-                            taxaDistances[ii][jj][2 * i] += 1;
-                            taxaDistances[ii][jj][2 * i + 1] += minDistances[j][k][2];
+                            if (taxaDistances[ii][jj][2 * i] == 0 || minDistances[j][k][2] < 2 * taxaDistances[ii][jj][2 * i + 1] / taxaDistances[ii][jj][2 * i]) {
+                                taxaDistances[ii][jj][2 * i] += 1;
+                                taxaDistances[ii][jj][2 * i + 1] += minDistances[j][k][2];
+                                counterAccept++;
+                            } else {
+                                counterDecline++;
+                            }
                             for (int l = 0; l < size; l++) {
                                 for (int m = 0; m < size - l; m++) {
                                     if ((l == minDistances[j][k][0] && indexInTaxa[m + l] == indexInTaxa[minDistances[j][k][1]]) || (m + l == minDistances[j][k][1] && indexInTaxa[l] == indexInTaxa[minDistances[j][k][0]]) || (l == minDistances[j][k][1] && indexInTaxa[m + l] == indexInTaxa[minDistances[j][k][0]]) || (m + l == minDistances[j][k][0] && indexInTaxa[l] == indexInTaxa[minDistances[j][k][1]])) {
-//                                        if (i == 9) {
-//                                            printf("delete: %d, %d\t", l, m + l);
-//                                        }
                                         dist[l][m] = 0;
                                     }
                                 }
                             }
-//                            if (i == 9) {
-//                                printf("\n");
-//                            }
                             minDistances[j][k][0] = 0;
                             minDistances[j][k][1] = 0;
                             minDistances[j][k][2] = 0;
@@ -224,22 +204,6 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
                     }
                 }
             }
-            
-            if (i == 9) {
-                printf("\t");
-                for (int j = 0; j < numberOfTaxa; j++) {
-                    printf("%s\t", taxa[j]);
-                }
-                printf("\n");
-                for (int j = 0; j < numberOfTaxa; j++) {
-                    printf("%s\t", taxa[j]);
-                    for (int k = 0; k < numberOfTaxa; k++) {
-                        printf("%d\t", (int) taxaDistances[j][k][2 * i + 1]);
-                    }
-                    printf("\n");
-                }
-                printf("\n");
-            }
         }
         for (int j = 0; j < size; j++) {
             free(taxaInTree[j]);
@@ -255,6 +219,7 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
         distance[i] = (double *) calloc(sizeof(double), numberOfTaxa);
     }
     
+//    FILE *f = fopen("count", "w");
     for (int i = 0; i < numberOfTaxa; i++) {
         for (int j = 0; j < numberOfTaxa; j++) {
             if (i < j) {
@@ -276,14 +241,20 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
                 }
                 if (count != 0) {
                     distance[i][j] = distance[i][j] / count;
+//                    fprintf(f, "%d\t", count);
                 }
             } else {
                 distance[i][j] = distance[j][i];
             }
         }
+//        fprintf(f, "\n");
     }
+//    fclose(f);
 
     makeTreeFromDistanceArray(distance, numberOfTaxa, speciesTree, taxa);
+    
+    printf("accept: %d\n", counterAccept);
+    printf("decline: %d\n", counterDecline);
     
     for (int i = 0; i < numberOfTaxa; i++) {
         for (int j = 0; j < numberOfTaxa; j++) {

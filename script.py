@@ -12,7 +12,7 @@ outputName = "output"
 numberOfGeneTrees = 50
 nameOfDirectory = "Simphy/test_" + str(numberOfGeneTrees)
 numberOfSets = 100
-numberOfLeaves = [15,25,50]
+numberOfLeaves = [15,25]
 legendNames = ["mini"]
 fileResults = open("results", "w")
 exponentGeneTree = int(math.log10(numberOfGeneTrees))
@@ -56,7 +56,7 @@ for leaves in numberOfLeaves:
         inputStr = nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + inputName
         outputStr = nameOfDirectory + "_" + str(leaves) + "/" + stringFillerSet + str(set) + "/" + outputName
 
-        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "0"])
+        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "0", "-p"])
         cmd2.communicate()
 #        cmd2 = subprocess.Popen(["./njst/main", "-i", inputStr, "-o", outputStr + "1", "-t" , "-r"])
 #        cmd2.communicate()

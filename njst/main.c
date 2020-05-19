@@ -21,7 +21,8 @@ int main(int argc, char **argv) {
     int root = 0;
     int square = 0;
     int ustar = 0;
-    while((c = getopt(argc,argv,"ubmwtrsn:o:i:"))!=-1) {
+    int miniPairs = 0;
+    while((c = getopt(argc,argv,"ubmwtrspn:o:i:"))!=-1) {
         switch(c) {
             case 'i':
                 input = optarg;
@@ -32,6 +33,8 @@ int main(int argc, char **argv) {
             case 'n':
                 norm = atoi(optarg);
                 break;
+            case 'p':
+                miniPairs = 1;
             case 's':
                 square = 1;
                 break;
@@ -62,7 +65,7 @@ int main(int argc, char **argv) {
     // Declare root for species tree
     struct node *speciestree = (struct node*) calloc(sizeof(struct node), 1);
     
-    inferSpeciesTreeFromGeneTrees(&speciestree, input, mini, ustar, norm, branchLength, weight, square, tag, root);
+    inferSpeciesTreeFromGeneTrees(&speciestree, input, mini, ustar, norm, branchLength, weight, square, tag, root, miniPairs);
     
     if (errno != 0) {
         return errno;
