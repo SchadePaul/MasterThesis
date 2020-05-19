@@ -21,8 +21,8 @@ int main(int argc, char **argv) {
     int root = 0;
     int square = 0;
     int ustar = 0;
-    int miniPairs = 0;
-    while((c = getopt(argc,argv,"ubmwtrspn:o:i:"))!=-1) {
+    double miniPairs = 0;
+    while((c = getopt(argc,argv,"ubmwtrsp:n:o:i:"))!=-1) {
         switch(c) {
             case 'i':
                 input = optarg;
@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
                 norm = atoi(optarg);
                 break;
             case 'p':
-                miniPairs = 1;
+                miniPairs = atof(optarg);
             case 's':
                 square = 1;
                 break;

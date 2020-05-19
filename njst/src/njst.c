@@ -9,9 +9,9 @@
 #include <math.h>
 
 static void readFileToTrees(struct node ***trees, const char *filename, int *numberOfTrees, char ***allLeafNames, int *numberOfLeafNames);
-void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, int miniPairs);
+void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, double miniPairs);
 
-void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, int miniPairs) {
+void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, double miniPairs) {
     // Read file and get important data (#Trees, #Taxa, Taxa)
     int numberOfTrees = 0;
     char **taxa;
@@ -84,7 +84,7 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
         }
         
         // miniPairs
-        if (miniPairs == 1) {
+        if (miniPairs != 0) {
             int **allIndices = (int **) calloc(sizeof(int *), size);
             int *indexInMinDiances = (int *) calloc(sizeof(int), size);
             int numberOfDifferentTaxa = 0;
@@ -154,10 +154,16 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
                         }
                         if (minDistances[j][k][2] != 0 && j != k) {
                             adddd = 0;
-                            if (taxaDistances[ii][jj][2 * i] == 0 || minDistances[j][k][2] < 2 * taxaDistances[ii][jj][2 * i + 1] / taxaDistances[ii][jj][2 * i]) {
-                                taxaDistances[ii][jj][2 * i] += 1;
+			    int numberOfPairs = allIndices[j][1];
+			    if (allIndices[k][1] < numberOfPairs) {
+				numberOfPairs = allIndices[k][1];
+			    }
+                            if (taxaDistances[ii][jj][2 * i] == 0 || minDistances[j][k][2] < miniPairs * taxaDistances[ii][jj][2 * i + 1] / taxaDistances[ii][jj][2 * i]) {
+                              	if (taxaDistances[ii][jj][2 * i] != 0) {
+					counterAccept++;
+				}
+				taxaDistances[ii][jj][2 * i] += 1;
                                 taxaDistances[ii][jj][2 * i + 1] += minDistances[j][k][2];
-                                counterAccept++;
                             } else {
                                 counterDecline++;
                             }
