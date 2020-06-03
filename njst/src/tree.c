@@ -16,7 +16,12 @@ void tagAndRoot(struct node *tree);
 static void goingUp(int index, int numberOfLeaves, double dist, double **allDist, int size, double norm);
 static void goingDown(int index, int numberOfLeaves, double dist, double **allDist, double norm);
 void leafToLeafDistance(struct node *root, double **dist, char **name, int normDistance, int branchLength);
+void deletedTaggedDistance(struct node *current, double **dist, int *index);
 int compNumberOfNodes(struct node *tree);
+static void setScoreTagLeavesZero(struct node *tree);
+int scoreAndTag2(struct node *tree);
+static int subScoreAndTag2(struct node *current, char **names, int *index);
+static int check2(char **names, int index0, int index1, int index2, int index3);
 
 int compNumberOfNodes(struct node *tree) {
     int number = 1;
@@ -28,8 +33,6 @@ int compNumberOfNodes(struct node *tree) {
     }
     return number;
 }
-
-
 
 void freeTree(struct node *tree) {
     struct node *before = tree;
@@ -167,6 +170,120 @@ int scoreAndTag(struct node *tree, char **names) {
     return score;
 }
 
+int check2(char **names, int index0, int index1, int index2, int index3) {
+    int score = 0;
+    int aInB = 0;
+    int bInA = 0;
+    for (int i = index0; i < index1; i++) {
+        for (int j = index2; j < index3; j++) {
+            if (strcmp(names[i], names[j]) == 0) {
+                aInB += 1;
+                break;
+            }
+        }
+    }
+    
+    for (int i = index2; i < index3; i++) {
+        for (int j = index0; j < index1; j++) {
+            if (strcmp(names[i], names[j]) == 0) {
+                bInA += 1;
+                break;
+            }
+        }
+    }
+    
+    if (aInB == (index1 - index0) || bInA == (index3 - index2)) {
+        if (aInB == (index1 - index0) && bInA == (index3 - index2)) {
+            score = 1;
+        } else {
+            score = 2;
+        }
+    } else if (aInB != 0) {
+        score = 3;
+    }
+    return score;
+}
+
+int subScoreAndTag2(struct node *current, char **names, int *index) {
+    int score = 0;
+    if (current->firstChild != 0) {
+        int children = current->numberOfChildren;
+        int *indices = calloc(sizeof(int), children + 1);
+        int i = 0;
+        indices[0] = *index;
+        struct node *workOn = current->firstChild;
+        while (workOn != 0) {
+            i += 1;
+            subScoreAndTag2(workOn, names, index);
+            score += workOn->score;
+            workOn = workOn->nextSibling;
+            indices[i] = *index + 1;
+            if (workOn != 0) {
+                *index += 1;
+            }
+        }
+        for (i = 0; i < children - 1; i++) {
+            for (int j = i + 1; j < children; j++) {
+                int checker = check2(names, indices[i], indices[i + 1], indices[j], indices[j + 1]);
+                if (checker != 0) {
+                    (current->tag2)[i * children + j - (((i + 1) * (i + 2)) / 2)] = 1;
+                } else {
+                    (current->tag2)[i * children + j - (((i + 1) * (i + 2)) / 2)] = 0;
+                }
+                score += checker;
+            }
+        }
+        
+    } else {
+        strcpy(names[*index], current->name);
+    }
+    if (score != 0) {
+        current->score = score;
+    }
+    return score;
+}
+
+int scoreAndTag2(struct node *tree) {
+    int size = tree->numberOfLeaves;
+    char **names = calloc(sizeof(char *), size);
+    for (int i = 0; i < size; i++) {
+        names[i] = calloc(sizeof(char), maxNameLength);
+    }
+    int *index = calloc(sizeof(int), 1);
+    int score = subScoreAndTag2(tree, names, index);
+    for (int i = 0; i < size; i++) {
+        free(names[i]);
+    }
+    free(names);
+    return score;
+}
+
+
+
+
+void setScoreTagLeavesZero(struct node *tree) {
+    struct node *current = tree;
+    current->tag = 0;
+    current->score = 0;
+    current->numberOfLeaves = 0;
+    while (current->firstChild != 0) {
+        current = current->firstChild;
+        current->tag = 0;
+        current->score = 0;
+        current->numberOfLeaves = 0;
+    }
+    while (current->nextSibling == 0) {
+        current = current->parent;
+        if (current == tree) {
+            return;
+        }
+    }
+    current = current->nextSibling;
+    current->tag = 0;
+    current->score = 0;
+    current->numberOfLeaves = 0;
+}
+
 static void reRoot2(struct node *tree, struct node *root) {
     if (tree->parent != root) {
         struct node *current = tree;
@@ -197,9 +314,9 @@ static void reRoot2(struct node *tree, struct node *root) {
         struct node *tmpCurrent = currentSibling->parent->parent;
         struct node *tmpParent = currentSibling->parent;
         current->nextSibling = currentSibling->parent;
-        current->nextSibling->score = 0;
-        current->nextSibling->tag = 0;
-        current->nextSibling->numberOfLeaves = 0;
+//        current->nextSibling->score = 0;
+//        current->nextSibling->tag = 0;
+//        current->nextSibling->numberOfLeaves = 0;
         current->nextSibling->parent = toParent;
         while (1) {
             current = tmpCurrent;
@@ -250,9 +367,9 @@ static void reRoot2(struct node *tree, struct node *root) {
             tmpParent = current;
             tmpCurrent = current->parent;
             current->parent = toParent;
-            current->score = 0;
-            current->tag = 0;
-            current->numberOfLeaves = 0;
+//            current->score = 0;
+//            current->tag = 0;
+//            current->numberOfLeaves = 0;
             currentSibling = toParent->firstChild;
             while (currentSibling->nextSibling != 0) {
                 currentSibling = currentSibling->nextSibling;
@@ -264,12 +381,14 @@ static void reRoot2(struct node *tree, struct node *root) {
         root->firstChild = tree;
         root->firstChild->parent = root;
         root->firstChild->nextSibling->parent = root;
-        root->score = 0;
-        root->tag = 0;
-        root->numberOfLeaves = 0;
+//        root->score = 0;
+//        root->tag = 0;
+//        root->numberOfLeaves = 0;
         free(newRoot);
+        setScoreTagLeavesZero(root);
         compNumberOfLeaves(root);
     }
+//    printTree(root);
 }
 
 
@@ -290,7 +409,7 @@ void tagAndRoot(struct node *tree) {
             current = current->firstChild;
             if (current->idNo == id) {
                 reRoot2(current, tree);
-                score = scoreAndTag(tree, names);
+                score = scoreAndTag2(tree);
                 if (score < bestScore) {
                     bestScore = score;
                     bestId = id;
@@ -301,9 +420,9 @@ void tagAndRoot(struct node *tree) {
                 }
             }
         }
-        if (score == 0) {
-            break;
-        }
+//        if (score == 0) {
+//            break;
+//        }
         while (current->nextSibling == 0) {
             current = current->parent;
             if (current->parent == 0) {
@@ -314,7 +433,7 @@ void tagAndRoot(struct node *tree) {
             current = current->nextSibling;
             if (current->idNo == id) {
                 reRoot2(current, tree);
-                score = scoreAndTag(tree, names);
+                score = scoreAndTag2(tree);
                 if (score < bestScore) {
                     bestScore = score;
                     bestId = id;
@@ -329,7 +448,7 @@ void tagAndRoot(struct node *tree) {
             current = current->firstChild;
             if (current->idNo == bestId) {
                 reRoot2(current, tree);
-                scoreAndTag(tree, names);
+                scoreAndTag2(tree);
                 break;
             }
         }
@@ -342,11 +461,10 @@ void tagAndRoot(struct node *tree) {
         current = current->nextSibling;
         if (current->idNo == bestId) {
             reRoot2(current, tree);
-            scoreAndTag(tree, names);
+            scoreAndTag2(tree);
             break;
         }
     }
-    compNumberOfLeaves(tree);
     for (int i = 0; i < size; i++) {
         free(names[i]);
     }
@@ -372,6 +490,37 @@ static void goingDown(int index, int numberOfLeaves, double dist, double **allDi
             allDist[i][j - i] += dist / norm;
         }
     }
+}
+
+void deletedTaggedDistance(struct node *current, double **dist, int *index) {
+    int children = current->numberOfChildren;
+    if (children != 0) {
+        struct node *workOn = current->firstChild;
+        for (int i = 0; i < children; i++) {
+            int index0 = *index;
+            int index1 = index0 + workOn->numberOfLeaves;
+            int index2 = index1;
+            struct node *workOn2 = workOn->nextSibling;
+            for (int j = i + 1; j < children; j++) {
+                int index3 = index2 + workOn2->numberOfLeaves;
+                int index = (i * children + j) - (((i + 1) * (i + 2)) / 2);
+                if (current->tag2[index] != 0) {
+                    for (int k = index0; k < index1; k++) {
+                        for (int l = index2; l < index3; l++) {
+                            dist[k][l - k] = 0;
+                        }
+                    }
+                }
+                index2 += workOn2->numberOfLeaves;
+                workOn2 = workOn2->nextSibling;
+            }
+            deletedTaggedDistance(workOn, dist, index);
+            workOn = workOn->nextSibling;
+        }
+    } else {
+        *index += 1;
+    }
+    
 }
 
 
@@ -414,13 +563,13 @@ void leafToLeafDistance(struct node *root, double **dist, char **name, int normD
             
             struct node *toFree = current;
             current = current->parent;
-            free(toFree);
+//            free(toFree);
             if (current == root) {
                 break;
             }
         }
         if (current == root) {
-            free(current);
+//            free(current);
             break;
         }
         if (!branchLength) {
@@ -429,20 +578,10 @@ void leafToLeafDistance(struct node *root, double **dist, char **name, int normD
             goingUp(index, current->numberOfLeaves, current->distToParent, dist, size, norm);
         }
         
-        // ignore distances between nodes that have LCA marked as duplication, distance will result in 0 or negative and be ignored
-        if (current->parent->tag == 1) {
-            for (int i = index - current->numberOfLeaves + 1; i <= index; i++) {
-                for (int j = index + 1; j <= index + current->nextSibling->numberOfLeaves; j++) {
-                    dist[i][j - i] -= size;
-                }
-            }
-        }
-        
-        
         index++;
         struct node *toFree = current;
         current = current->nextSibling;
-        free(toFree);
+//        free(toFree);
         if (!branchLength) {
             goingDown(index, current->numberOfLeaves, 1.0, dist, norm);
         } else {

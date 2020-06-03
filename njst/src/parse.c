@@ -22,16 +22,20 @@ void saveTree(struct node *tree, const char *name);
 
 int compNumberOfLeaves(struct node *current) {
     int num = 0;
+    current->numberOfChildren = 0;
     if (current->firstChild != NULL) {
         struct node *workOn = current->firstChild;
+        workOn->parent->numberOfChildren += 1;
         num = compNumberOfLeaves(workOn);
         while (workOn->nextSibling != NULL) {
             num += compNumberOfLeaves(workOn->nextSibling);
             workOn = workOn->nextSibling;
+            workOn->parent->numberOfChildren += 1;
         }
     } else {
         num = 1;
     }
+    current->tag2 = calloc(sizeof(int), (current->numberOfChildren * current->numberOfChildren - current->numberOfChildren) / 2);
     current->numberOfLeaves = num;
     return num;
 }
