@@ -391,6 +391,19 @@ static void reRoot2(struct node *tree, struct node *root) {
 //    printTree(root);
 }
 
+static void addRoot(struct node *tree) {
+    struct node *newNode = calloc(sizeof(struct node), 1);
+    newNode->parent = tree;
+    newNode->numberOfChildren = 2;
+    newNode->numberOfLeaves = tree->numberOfLeaves - tree->firstChild->numberOfLeaves;
+    newNode->firstChild = tree->firstChild->nextSibling;
+    newNode->name[0] = placeholderName;
+    newNode->tag2 = calloc(sizeof(int), 1);
+    tree->firstChild->nextSibling->parent = newNode;
+    tree->firstChild->nextSibling->nextSibling->parent = newNode;
+    tree->firstChild->nextSibling = newNode;
+    tree->numberOfChildren = 2;
+}
 
 void tagAndRoot(struct node *tree) {
     struct node *current = tree;
@@ -404,7 +417,13 @@ void tagAndRoot(struct node *tree) {
     for (int i = 0; i < size; i++) {
         names[i] = (char *) calloc(sizeof(char), maxNameLength);
     }
+    
+    if (tree->numberOfChildren == 3) {
+        addRoot(tree);
+    }
+    
     while (id < maxId) {
+//        printf("id: %d\n", id);
         while (current->firstChild != 0) {
             current = current->firstChild;
             if (current->idNo == id) {
@@ -420,9 +439,9 @@ void tagAndRoot(struct node *tree) {
                 }
             }
         }
-//        if (score == 0) {
-//            break;
-//        }
+        if (score == 0) {
+            break;
+        }
         while (current->nextSibling == 0) {
             current = current->parent;
             if (current->parent == 0) {
