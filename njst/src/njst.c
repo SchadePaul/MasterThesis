@@ -42,13 +42,6 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
             scoreAndTag2(trees[i]);
         }
         
-        
-        // Set weight factor
-        int weightFactor = 1;
-        if (weight == 1) {
-            weightFactor = size;
-        }
-        
         // Half-Matrix for distances between leafs
         double **dist = (double **) calloc(sizeof(double *), size);
         for (int j = 0; j < size; j++) {
@@ -101,6 +94,14 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
                     break;
                 }
             }
+        }
+        
+        // Set weight factor
+        int weightFactor = 1;
+        if (weight == 1) {
+            weightFactor = size;
+        } else if (weight == 2) {
+            weightFactor = numberOfDifferentTaxa;
         }
         
         double normFactor = 1.0;
