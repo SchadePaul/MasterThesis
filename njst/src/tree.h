@@ -7,5 +7,6 @@ void tagAndRoot(struct node *tree);
 int scoreAndTag(struct node *tree, char **names);
 int scoreAndTag2(struct node *tree);
 void deletedTaggedDistance(struct node *current, double **dist, int *index);
+void mad(struct node *root);
 
 #endif

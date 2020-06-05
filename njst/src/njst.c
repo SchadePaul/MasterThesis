@@ -37,7 +37,10 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
         // Prework on the trees
         if (root == 1) {
             tagAndRoot(trees[i]);
+        } else if (root == 2) {
+            mad(trees[i]);
         }
+        
         if (tag) {
             scoreAndTag2(trees[i]);
         }

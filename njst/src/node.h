@@ -7,16 +7,22 @@ static char const placeholderName = '*';
 
 struct node {
     char name[40];
+    
     int numberOfLeaves;
+    int numberOfChildren;
+    int numberOfNodes;
+    
     double distToParent;
+    
     struct node *parent;
     struct node *firstChild;
     struct node *nextSibling;
+    
     int tag;
     int *tag2;    // tag == 0: Speciation, tag == 1: Duplication
     int idNo;   // given at first read to identify while rooting
     int score;
-    int numberOfChildren;
+    
 };
 
 #endif

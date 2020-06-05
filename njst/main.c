@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     int square = 0;
     int ustar = 0;
     double miniPairs = 0;
-    while((c = getopt(argc,argv,"ubmtrsw:p:n:o:i:"))!=-1) {
+    while((c = getopt(argc,argv,"ubmtsr:w:p:n:o:i:"))!=-1) {
         switch(c) {
             case 'i':
                 input = optarg;
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
                 square = 1;
                 break;
             case 'r':
-                root = 1;
+                root = atoi(optarg);
                 break;
             case 't':
                 tag = 1;
