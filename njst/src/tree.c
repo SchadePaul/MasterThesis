@@ -855,8 +855,10 @@ static void madRoot(struct node **root, int topId, double rho) {
 }
 
 void mad(struct node *root) {
+    int *indexOfId = (int *) calloc(sizeof(int), root->numberOfNodes);
     double **nodeToNodeDist = (double **) calloc(sizeof(double *), root->numberOfNodes);
     double **relDev = (double **) calloc(sizeof(double *), root->numberOfLeaves);
+    double *rho = (double *) calloc(sizeof(double), 1);
     for (int j = 0; j < root->numberOfNodes; j++) {
         nodeToNodeDist[j] = (double *) calloc(sizeof(double), root->numberOfNodes);
     }
@@ -882,8 +884,6 @@ void mad(struct node *root) {
 //        printf("\n");
 //    }
 //    printf("\n");
-    
-    int *indexOfId = (int *) calloc(sizeof(int), root->numberOfNodes);
     
     struct node *current = root;
     int index = 0;
@@ -926,7 +926,6 @@ void mad(struct node *root) {
     
     double topScore = DBL_MAX;
     double topRho = 2;
-    double *rho = (double *) calloc(sizeof(double), 1);
     double score = DBL_MAX;
     int topId = 0;
     
@@ -958,4 +957,17 @@ void mad(struct node *root) {
         }
     }
     madRoot(&root, topId, topRho);
+    
+    free(indexOfId);
+    free(rho);
+    
+    for (int j = 0; j < root->numberOfNodes; j++) {
+        free(nodeToNodeDist[j]);
+    }
+    for (int j = 0; j < root->numberOfLeaves; j++) {
+        free(relDev[j]);
+    }
+    free(nodeToNodeDist);
+    free(relDev);
+    
 }
