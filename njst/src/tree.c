@@ -806,13 +806,13 @@ static void madRoot(struct node **root, int topId, double rho) {
         }
     }
     node->nextSibling = parent;
+    tmp = parent->parent;
+    parent->parent = newNode;
     if (parent == *root) {
-        root = &newNode;
+        *root = newNode;
         compNumberOfLeaves(*root);
         return;
     }
-    tmp = parent->parent;
-    parent->parent = newNode;
     node = parent;
     parent = tmp;
     
@@ -842,7 +842,7 @@ static void madRoot(struct node **root, int topId, double rho) {
         }
         node->nextSibling = 0;
         if (parent == (*root)) {
-            root = &newNode;
+            *root = newNode;
             break;
         }
         tmp = parent->parent;
@@ -850,8 +850,7 @@ static void madRoot(struct node **root, int topId, double rho) {
         node = parent;
         parent = tmp;
     }
-    compNumberOfLeaves(*root);
-//    printTree(*root);
+    compNumberOfLeaves(newNode);
     
 }
 
