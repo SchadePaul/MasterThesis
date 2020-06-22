@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <math.h>
 
-static void readFileToTrees(struct node ***trees, const char *filename, int *numberOfTrees, char ***allLeafNames, int *numberOfLeafNames);
+void readFileToTrees(struct node ***trees, const char *filename, int *numberOfTrees, char ***allLeafNames, int *numberOfLeafNames);
 void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, double miniPairs);
 
 void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, double miniPairs) {
@@ -30,15 +30,21 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
         }
     }
     
+    
+    printf("Number of trees:%d\n", numberOfTrees);
+    
     for (int i = 0; i < numberOfTrees; i++) {
         
         // Number of Leaves in this tree
         int size = trees[i]->numberOfLeaves;
+        
         // Prework on the trees
         if (root == 1) {
             tagAndRoot(trees[i]);
         } else if (root == 2) {
-            mad(trees[i]);
+            printTree(trees[i]);
+            mad(&trees[i]);
+            printTree(trees[i]);
         }
         
         if (tag) {
@@ -50,7 +56,7 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
         for (int j = 0; j < size; j++) {
             dist[j] = (double *) calloc(sizeof(double), size - j);
         }
-    
+        
         // Array of taxa in tree
         char **taxaInTree = (char **) calloc(sizeof(char *), size);
         for (int j = 0; j < size; j++) {
@@ -59,7 +65,7 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
         
         // Compute leaf distances
         leafToLeafDistance(trees[i], dist, taxaInTree, branchLength);
-        
+        printf("leafe to leaf\n");
         int *indexx = calloc(sizeof(int), 1);
         deletedTaggedDistance(trees[i], dist, indexx);
         
@@ -290,7 +296,7 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
     free(taxa);
 }
 
-static void readFileToTrees(struct node ***trees, const char *filename, int *numberOfTrees, char ***allLeafNames, int *numberOfLeafNames) {
+void readFileToTrees(struct node ***trees, const char *filename, int *numberOfTrees, char ***allLeafNames, int *numberOfLeafNames) {
     // read file to array of chars
     char **newickTree;
     readFileToArray(filename, &newickTree, numberOfTrees);

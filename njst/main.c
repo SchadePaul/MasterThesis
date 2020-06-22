@@ -5,6 +5,7 @@
 #include "src/parse.h"
 #include "src/tree.h"
 #include "src/node.h"
+#include "src/compare.h"
 #include <unistd.h>
 #include <getopt.h>
 #include <errno.h>
@@ -13,6 +14,7 @@ int main(int argc, char **argv) {
     char c;
     char *input;
     char *output;
+    char *compare = 0;
     int branchLength = 0;
     int mini = 0;
     int norm = 0;
@@ -22,13 +24,16 @@ int main(int argc, char **argv) {
     int square = 0;
     int ustar = 0;
     double miniPairs = 0;
-    while((c = getopt(argc,argv,"ubmtsr:w:p:n:o:i:"))!=-1) {
+    while((c = getopt(argc,argv,"ubmtsc:r:w:p:n:o:i:"))!=-1) {
         switch(c) {
             case 'i':
                 input = optarg;
                 break;
             case 'o':
                 output = optarg;
+                break;
+            case 'c':
+                compare = optarg;
                 break;
             case 'n':
                 norm = atoi(optarg);
@@ -62,17 +67,21 @@ int main(int argc, char **argv) {
         }
     }
 
-    // Declare root for species tree
-    struct node *speciestree = (struct node*) calloc(sizeof(struct node), 1);
-    
-    inferSpeciesTreeFromGeneTrees(&speciestree, input, mini, ustar, norm, branchLength, weight, square, tag, root, miniPairs);
-    
-    if (errno != 0) {
-        return errno;
+    if (compare != 0) {
+        stepByStep(input, compare);
+    } else {
+        // Declare root for species tree
+        struct node *speciestree = (struct node*) calloc(sizeof(struct node), 1);
+        
+        inferSpeciesTreeFromGeneTrees(&speciestree, input, mini, ustar, norm, branchLength, weight, square, tag, root, miniPairs);
+        
+        if (errno != 0) {
+            return errno;
+        }
+        saveTree(speciestree, output);
+        
+        freeTree(speciestree);
     }
-    saveTree(speciestree, output);
-    
-    freeTree(speciestree);
     
     return 0;
 }

@@ -1,12 +1,12 @@
 #ifndef NODE_H
 #define NODE_H
 
-static int const maxNameLength = 40;
+static int const maxNameLength = 4;
 static int const maxValueLength = 50;
 static char const placeholderName = '*';
 
 struct node {
-    char name[40];
+    char name[4];
     
     int numberOfLeaves;
     int numberOfChildren;

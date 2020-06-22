@@ -31,7 +31,7 @@ static void leafToLeafRelativeDeviation(struct node *root, double **dist, double
 static void calcRelDiv(struct node *current, double **dist, double **relDev, int *indexOfId);
 static double rms(struct node *root, struct node *node, double **dist, double **relDev, int *indexOfId, double topScore, double *rho);
 static void madRoot(struct node **root, int topId, double rho);
-void mad(struct node *root);
+void mad(struct node **root);
 
 int compNumberOfNodes(struct node *tree) {
     int number = 1;
@@ -565,6 +565,7 @@ void leafToLeafDistance(struct node *root, double **dist, char **name, int branc
     
     while (1) {
         while (current->firstChild != NULL) {
+//            printf("go down\n");
             current = current->firstChild;
             if (!branchLength) {
                 goingDown(index, current->numberOfLeaves, 1.0, dist);
@@ -576,6 +577,7 @@ void leafToLeafDistance(struct node *root, double **dist, char **name, int branc
         strcpy(name[index], current->name);
         
         while (current->nextSibling == NULL) {
+//            printf("go up\n");
             if (index < size - 1) {
                 if (!branchLength) {
                     goingUp(index, current->numberOfLeaves, 1.0, dist, size);
@@ -603,6 +605,7 @@ void leafToLeafDistance(struct node *root, double **dist, char **name, int branc
         
         index++;
 //        struct node *toFree = current;
+//        printf("go next\n");
         current = current->nextSibling;
 //        free(toFree);
         if (!branchLength) {
@@ -654,11 +657,14 @@ static void nodeToNodeDistance(struct node *root, double **dist) {
 
 
 static void calcRelDiv(struct node *current, double **dist, double **relDev, int *indexOfId) {
+    // check if internal node
     if (current->numberOfChildren == 0) {
         return;
     }
     struct node *first = current->firstChild;
     struct node *second;
+    
+    //go through all children
     for (int i = 0; i < current->numberOfChildren - 1; i++) {
         second = first->nextSibling;
         for (int j = i + 1; j < current->numberOfChildren; j++) {
@@ -681,6 +687,7 @@ static void calcRelDiv(struct node *current, double **dist, double **relDev, int
 }
 
 static void leafToLeafRelativeDeviation(struct node *root, double **dist, double **relDev, int *indexOfId) {
+    // Traverse Tree and and calc relative deviation for internal nodes
     struct node *current = root;
     while (1) {
         calcRelDiv(current, dist, relDev, indexOfId);
@@ -709,16 +716,18 @@ static double rms(struct node *root, struct node *node, double **dist, double **
     int i = node->idNo;
     
     
+    
+    // Calculate rho
+    
     for (int b = indexI_1; b < indexI_2; b++) {
         for (int c = 0; c < root->numberOfNodes; c++) {
-            double tmp = 0.0;
+            double tmp = (dist[b][c] - 2 * dist[b][i]) / pow(dist[b][c], 2.0);
             if ((c < indexI_1 || c >= indexI_2) && indexOfId[b] != -1 && indexOfId[c] != -1) {
-                tmp += (dist[b][c] - 2 * dist[i][c]) / (dist[b][c] * dist[b][c]);
                 double tmp2 = 0.0;
                 for (int bb = indexI_1; bb < indexI_2; bb++) {
                     for (int cc = 0; cc < root->numberOfNodes; cc++) {
                         if ((cc < indexI_1 || cc >= indexI_2) && indexOfId[bb] != -1 && indexOfId[cc] != -1) {
-                            tmp2 += 1 / (dist[bb][cc] * dist[bb][cc]);
+                            tmp2 += 1 / pow(dist[bb][cc], 2.0);
                         }
                     }
                 }
@@ -741,28 +750,28 @@ static double rms(struct node *root, struct node *node, double **dist, double **
             if (indexOfId[c] == -1) {
                 continue;
             }
-            if ((b < indexI_1 && c < indexI_1) || (b >= indexI_1 && b < indexI_2 && c >= indexI_1 && c < indexI_2) || (b >= indexI_2 && c >= indexI_2)) {
-                rms += relDev[indexOfId[b]][indexOfId[c]] * relDev[indexOfId[b]][indexOfId[c]];
+            if ((b >= indexI_1 && b < indexI_2 && c >= indexI_1 && c < indexI_2) || (!(b >= indexI_1 && b < indexI_2) && !(c >= indexI_1 && c < indexI_2))) {
+                rms += pow(relDev[indexOfId[b]][indexOfId[c]], 2.0);
+//                printf("same side\t%d\t%d\t\t%f\n", b, c, relDev[indexOfId[b]][indexOfId[c]] * relDev[indexOfId[b]][indexOfId[c]]);
             } else {
                 if (b < indexI_1 || b >= indexI_2) {
                     rms += pow((((2 * (dist[c][i] + *rho * distIJ)) / dist[b][c]) - 1), 2.0);
+//                    printf("c closer\t%d\t%d\t\t%f\n", b, c, pow((((2 * (dist[c][i] + *rho * distIJ)) / dist[b][c]) - 1), 2.0));
                 } else {
                     rms += pow((((2 * (dist[b][i] + *rho * distIJ)) / dist[b][c]) - 1), 2.0);
+//                    printf("b closer\t%d\t%d\t\t%f\n", b, c, pow((((2 * (dist[b][i] + *rho * distIJ)) / dist[b][c]) - 1), 2.0));
                 }
             }
         }
-        if (rms > topScore) {
-            break;
-        }
     }
+//    printf("%f\t%f\t%d\n", rms, *rho, i);
     return rms;
 }
 
 static void madRoot(struct node **root, int topId, double rho) {
-//    printTree(*root);
     
+    // Find node where root should be inserted
     struct node *node = (*root);
-        
     while (1) {
         while (node->firstChild != 0) {
             node = node->firstChild;
@@ -782,17 +791,22 @@ static void madRoot(struct node **root, int topId, double rho) {
         }
     }
 
-    struct node *parent = node->parent;
+    // create new root node
     struct node *newNode = (struct node *) calloc(sizeof(struct node), 1);
+    struct node *parent = node->parent;
     struct node *tmp;
     double parentdist = 0.0;
     double dbltmp = 0.0;
     
+    
+    // First child the node where the root should be inserted
     newNode->firstChild = node;
     node->parent = newNode;
     node->distToParent = rho * node->distToParent;
     parentdist = parent->distToParent;
     parent->distToParent = (1 - rho) * (node->distToParent / rho);
+    
+    // The node where the root should be inserted is removed from the children of its former parent node
     if (parent->firstChild == node) {
         parent->firstChild = node->nextSibling;
     } else {
@@ -805,10 +819,12 @@ static void madRoot(struct node **root, int topId, double rho) {
             tmp = tmp->nextSibling;
         }
     }
+    
+    // The node where the root should be inserted parent becomes sibling
     node->nextSibling = parent;
     tmp = parent->parent;
     parent->parent = newNode;
-    if (parent == *root) {
+    if (parent == (*root)) {
         *root = newNode;
         compNumberOfLeaves(*root);
         return;
@@ -854,38 +870,43 @@ static void madRoot(struct node **root, int topId, double rho) {
     
 }
 
-void mad(struct node *root) {
-    int *indexOfId = (int *) calloc(sizeof(int), root->numberOfNodes);
-    double **nodeToNodeDist = (double **) calloc(sizeof(double *), root->numberOfNodes);
-    double **relDev = (double **) calloc(sizeof(double *), root->numberOfLeaves);
+void mad(struct node **root) {
+    
+    // Allocate space for index, distance, relative deviation, rho
+    int *indexOfId = (int *) calloc(sizeof(int), (*root)->numberOfNodes);
+    double **nodeToNodeDist = (double **) calloc(sizeof(double *), (*root)->numberOfNodes);
+    double **relDev = (double **) calloc(sizeof(double *), (*root)->numberOfLeaves);
     double *rho = (double *) calloc(sizeof(double), 1);
-    for (int j = 0; j < root->numberOfNodes; j++) {
-        nodeToNodeDist[j] = (double *) calloc(sizeof(double), root->numberOfNodes);
+    
+    for (int j = 0; j < (*root)->numberOfNodes; j++) {
+        nodeToNodeDist[j] = (double *) calloc(sizeof(double), (*root)->numberOfNodes);
     }
-    for (int j = 0; j < root->numberOfLeaves; j++) {
-        relDev[j] = (double *) calloc(sizeof(double), root->numberOfLeaves);
+    for (int j = 0; j < (*root)->numberOfLeaves; j++) {
+        relDev[j] = (double *) calloc(sizeof(double), (*root)->numberOfLeaves);
     }
     
-    nodeToNodeDistance(root, nodeToNodeDist);
+    // Calc all node to node distance
+    nodeToNodeDistance(*root, nodeToNodeDist);
     
-    for (int i = 0; i < root->numberOfNodes; i++) {
-        for (int j = 0; j < root->numberOfNodes; j++) {
+    // Fill array
+    for (int i = 0; i < (*root)->numberOfNodes; i++) {
+        for (int j = 0; j < (*root)->numberOfNodes; j++) {
             if (j < i) {
                 nodeToNodeDist[i][j] = nodeToNodeDist[j][i];
             }
         }
     }
     
-    
-//    for (int i = 0; i < root->numberOfNodes; i++) {
-//        for (int j = 0; j < root->numberOfNodes; j++) {
+//    for (int i = 0; i < (*root)->numberOfNodes; i++) {
+//        for (int j = 0; j < (*root)->numberOfNodes; j++) {
 //            printf("%f\t", nodeToNodeDist[i][j]);
 //        }
 //        printf("\n");
 //    }
 //    printf("\n");
     
-    struct node *current = root;
+    // Traverse Tree and save IDs of leaves
+    struct node *current = *root;
     int index = 0;
     while (1) {
         if (current->firstChild == 0) {
@@ -903,27 +924,39 @@ void mad(struct node *root) {
         }
         while (current->nextSibling == 0) {
             current = current->parent;
-            if (current == root) {
+            if (current == *root) {
                 break;
             }
         }
-        if (current == root) {
+        if (current == *root) {
             break;
         }
         current = current->nextSibling;
         index += 1;
     }
     
-    leafToLeafRelativeDeviation(root, nodeToNodeDist, relDev, indexOfId);
+    // Calc relative Deviation
+    leafToLeafRelativeDeviation(*root, nodeToNodeDist, relDev, indexOfId);
     
-//    for (int i = 0; i < root->numberOfLeaves; i++) {
-//        for (int j = 0; j < root->numberOfLeaves; j++) {
+    for (int i = 0; i < (*root)->numberOfLeaves; i++) {
+        for (int j = 0; j < (*root)->numberOfLeaves; j++) {
+            if (j < i) {
+                relDev[i][j] = relDev[j][i];
+            }
+        }
+    }
+    
+//    for (int i = 0; i < (*root)->numberOfLeaves; i++) {
+//        for (int j = 0; j < (*root)->numberOfLeaves; j++) {
 //            printf("%f\t", relDev[i][j]);
 //        }
 //        printf("\n");
 //    }
 //    printf("\n");
     
+    
+    
+    // get scores for all possible roots
     double topScore = DBL_MAX;
     double topRho = 2;
     double score = DBL_MAX;
@@ -932,7 +965,7 @@ void mad(struct node *root) {
     while (1) {
         while (current->firstChild != 0) {
             current = current->firstChild;
-            score = rms(root, current, nodeToNodeDist, relDev, indexOfId, topScore, rho);
+            score = rms(*root, current, nodeToNodeDist, relDev, indexOfId, topScore, rho);
             if (score < topScore) {
                 topScore = score;
                 topRho = *rho;
@@ -941,33 +974,38 @@ void mad(struct node *root) {
         }
         while (current->nextSibling == 0) {
             current = current->parent;
-            if (current == root) {
+            if (current == *root) {
                 break;
             }
         }
-        if (current == root) {
+        if (current == *root) {
             break;
         }
         current = current->nextSibling;
-        score = rms(root, current, nodeToNodeDist, relDev, indexOfId, topScore, rho);
+        score = rms(*root, current, nodeToNodeDist, relDev, indexOfId, topScore, rho);
         if (score < topScore) {
             topScore = score;
             topRho = *rho;
             topId = current->idNo;
         }
     }
-    madRoot(&root, topId, topRho);
-    
+   
     free(indexOfId);
     free(rho);
     
-    for (int j = 0; j < root->numberOfNodes; j++) {
+    for (int j = 0; j < (*root)->numberOfNodes; j++) {
         free(nodeToNodeDist[j]);
     }
-    for (int j = 0; j < root->numberOfLeaves; j++) {
+    for (int j = 0; j < (*root)->numberOfLeaves; j++) {
         free(relDev[j]);
     }
     free(nodeToNodeDist);
     free(relDev);
-    
+    int numberOfLeavesbefore = (*root)->numberOfLeaves;
+    madRoot(root, topId, topRho);
+    if (numberOfLeavesbefore != (*root)->numberOfLeaves) {
+        printf("check\n");
+    }
+    printf("top_\n");
+    printf("%f\t%f\t%d\n", topScore, topRho, topId);
 }
