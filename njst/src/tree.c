@@ -29,7 +29,9 @@ static void goingDown2(double **dist, double distance, int index, int size);
 static void nodeToNodeDistance(struct node *root, double **dist);
 static void leafToLeafRelativeDeviation(struct node *root, double **dist, double **relDev, int *indexOfId);
 static void calcRelDiv(struct node *current, double **dist, double **relDev, int *indexOfId);
-static double rms(struct node *root, struct node *node, double **dist, double **relDev, int *indexOfId, double topScore, double *rho);
+static double rms(struct node *root, struct node *node, double **dist, double **relDev, int *indexOfId, double *rho);
+static void findNodeByID(struct node *root, int id, struct node **nodeWithId);
+static void removeSibling(struct node *sibling, struct node *parent);
 static void madRoot(struct node **root, int topId, double rho);
 void mad(struct node **root);
 
@@ -564,7 +566,7 @@ void leafToLeafDistance(struct node *root, double **dist, char **name, int branc
     }
     
     while (1) {
-        while (current->firstChild != NULL) {
+        while (current->firstChild != 0) {
 //            printf("go down\n");
             current = current->firstChild;
             if (!branchLength) {
@@ -576,7 +578,7 @@ void leafToLeafDistance(struct node *root, double **dist, char **name, int branc
         
         strcpy(name[index], current->name);
         
-        while (current->nextSibling == NULL) {
+        while (current->nextSibling == 0) {
 //            printf("go up\n");
             if (index < size - 1) {
                 if (!branchLength) {
@@ -705,7 +707,7 @@ static void leafToLeafRelativeDeviation(struct node *root, double **dist, double
     }
 }
 
-static double rms(struct node *root, struct node *node, double **dist, double **relDev, int *indexOfId, double topScore, double *rho) {
+static double rms(struct node *root, struct node *node, double **dist, double **relDev, int *indexOfId, double *rho) {
     
     double rms = 0.0;
     double distIJ = node->distToParent;
@@ -768,106 +770,82 @@ static double rms(struct node *root, struct node *node, double **dist, double **
     return rms;
 }
 
+static void findNodeByID(struct node *root, int id, struct node **nodeWithId) {
+    *nodeWithId = root;
+    while (1) {
+        while ((*nodeWithId)->firstChild != 0) {
+            (*nodeWithId) = (*nodeWithId)->firstChild;
+            if ((*nodeWithId)->idNo == id) {
+                return;
+            }
+        }
+        while ((*nodeWithId)->nextSibling == 0) {
+            (*nodeWithId) = (*nodeWithId)->parent;
+        }
+        (*nodeWithId) = (*nodeWithId)->nextSibling;
+        if ((*nodeWithId)->idNo == id) {
+            return;
+        }
+    }
+}
+
+static void removeSibling(struct node *sibling, struct node *parent) {
+    if (parent->firstChild == sibling) {
+        parent->firstChild = sibling->nextSibling;
+    } else {
+        struct node *child = parent->firstChild;
+        while (child->nextSibling != sibling) {
+            child = child->nextSibling;
+        }
+        child->nextSibling = sibling->nextSibling;
+    }
+    sibling->nextSibling = 0;
+}
+
 static void madRoot(struct node **root, int topId, double rho) {
     
-    // Find node where root should be inserted
-    struct node *node = (*root);
-    while (1) {
-        while (node->firstChild != 0) {
-            node = node->firstChild;
-            if (node->idNo == topId) {
-                break;
-            }
-        }
-        if (node->idNo == topId) {
-            break;
-        }
-        while (node->nextSibling == 0) {
-            node = node->parent;
-        }
-        node = node->nextSibling;
-        if (node->idNo == topId) {
-            break;
-        }
-    }
-
-    // create new root node
-    struct node *newNode = (struct node *) calloc(sizeof(struct node), 1);
-    struct node *parent = node->parent;
-    struct node *tmp;
-    double parentdist = 0.0;
-    double dbltmp = 0.0;
+    // Find node where new root should be inserted
+    struct node *current;
+    findNodeByID((*root), topId, &current);
+    struct node *myParent = current->parent;
+    // Create new root node
+    struct node *newRoot = (struct node *) calloc(sizeof(struct node), 1);
+    struct node *newParent = newRoot;
     
+    // Set new parent
+    current->parent = newParent;
+    newParent->firstChild = current;
     
-    // First child the node where the root should be inserted
-    newNode->firstChild = node;
-    node->parent = newNode;
-    node->distToParent = rho * node->distToParent;
-    parentdist = parent->distToParent;
-    parent->distToParent = (1 - rho) * (node->distToParent / rho);
+    // Remove as child
+    removeSibling(current, myParent);
     
-    // The node where the root should be inserted is removed from the children of its former parent node
-    if (parent->firstChild == node) {
-        parent->firstChild = node->nextSibling;
-    } else {
-        tmp = parent->firstChild;
-        while (1) {
-            if (tmp->nextSibling == node) {
-                tmp->nextSibling = node->nextSibling;
-                break;
-            }
-            tmp = tmp->nextSibling;
-        }
-    }
+    // Add as sibling
+    current->nextSibling = myParent;
     
-    // The node where the root should be inserted parent becomes sibling
-    node->nextSibling = parent;
-    tmp = parent->parent;
-    parent->parent = newNode;
-    if (parent == (*root)) {
-        *root = newNode;
-        compNumberOfLeaves(*root);
-        return;
-    }
-    node = parent;
-    parent = tmp;
+    current = myParent->parent;
+    myParent->parent = newParent;
+    
+    newParent = myParent;
+    myParent = current->parent;
+    
     
     while (1) {
-        dbltmp = parent->distToParent;
-        parent->distToParent = parentdist;
-        parentdist = dbltmp;
-        
-        tmp = node->firstChild;
-        while (tmp->nextSibling != 0) {
-            tmp = tmp->nextSibling;
+        removeSibling(newParent, current);
+        current->parent = newParent;
+        newParent = newParent->firstChild;
+        while (newParent->nextSibling != 0) {
+            newParent = newParent->nextSibling;
         }
-        
-        tmp->nextSibling = parent;
-        
-        if (parent->firstChild == node) {
-            parent->firstChild = node->nextSibling;
-        } else {
-            tmp = parent->firstChild;
-            while (1) {
-                if (tmp->nextSibling == node) {
-                    tmp->nextSibling = node->nextSibling;
-                    break;
-                }
-                tmp = tmp->nextSibling;
-            }
-        }
-        node->nextSibling = 0;
-        if (parent == (*root)) {
-            *root = newNode;
+        newParent->nextSibling = current;
+        if (current == (*root)) {
             break;
         }
-        tmp = parent->parent;
-        parent->parent = newNode;
-        node = parent;
-        parent = tmp;
+        newParent = current;
+        current = myParent;
+        myParent = myParent->parent;
     }
-    compNumberOfLeaves(newNode);
-    
+    (*root) = newRoot;
+    compNumberOfLeaves(*root);
 }
 
 void mad(struct node **root) {
@@ -965,7 +943,7 @@ void mad(struct node **root) {
     while (1) {
         while (current->firstChild != 0) {
             current = current->firstChild;
-            score = rms(*root, current, nodeToNodeDist, relDev, indexOfId, topScore, rho);
+            score = rms(*root, current, nodeToNodeDist, relDev, indexOfId, rho);
             if (score < topScore) {
                 topScore = score;
                 topRho = *rho;
@@ -982,7 +960,7 @@ void mad(struct node **root) {
             break;
         }
         current = current->nextSibling;
-        score = rms(*root, current, nodeToNodeDist, relDev, indexOfId, topScore, rho);
+        score = rms(*root, current, nodeToNodeDist, relDev, indexOfId, rho);
         if (score < topScore) {
             topScore = score;
             topRho = *rho;
@@ -1001,11 +979,5 @@ void mad(struct node **root) {
     }
     free(nodeToNodeDist);
     free(relDev);
-    int numberOfLeavesbefore = (*root)->numberOfLeaves;
     madRoot(root, topId, topRho);
-    if (numberOfLeavesbefore != (*root)->numberOfLeaves) {
-        printf("check\n");
-    }
-    printf("top_\n");
-    printf("%f\t%f\t%d\n", topScore, topRho, topId);
 }

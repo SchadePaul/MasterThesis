@@ -34,7 +34,7 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
     printf("Number of trees:%d\n", numberOfTrees);
     
     for (int i = 0; i < numberOfTrees; i++) {
-        
+        printf("%d\n", i);
         // Number of Leaves in this tree
         int size = trees[i]->numberOfLeaves;
         
@@ -42,9 +42,9 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
         if (root == 1) {
             tagAndRoot(trees[i]);
         } else if (root == 2) {
-            printTree(trees[i]);
+            printf("leaves: %d\n", trees[i]->numberOfLeaves);
             mad(&trees[i]);
-            printTree(trees[i]);
+            printf("leaves: %d\n\n", trees[i]->numberOfLeaves);
         }
         
         if (tag) {
@@ -65,7 +65,6 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
         
         // Compute leaf distances
         leafToLeafDistance(trees[i], dist, taxaInTree, branchLength);
-        printf("leafe to leaf\n");
         int *indexx = calloc(sizeof(int), 1);
         deletedTaggedDistance(trees[i], dist, indexx);
         
