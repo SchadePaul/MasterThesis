@@ -829,7 +829,7 @@ static void madRoot(struct node **root, int topId, double rho) {
     myParent = current->parent;
     
     
-    while (1) {
+    while (current != 0) {
         removeSibling(newParent, current);
         current->parent = newParent;
         newParent = newParent->firstChild;
@@ -837,9 +837,6 @@ static void madRoot(struct node **root, int topId, double rho) {
             newParent = newParent->nextSibling;
         }
         newParent->nextSibling = current;
-        if (current == (*root)) {
-            break;
-        }
         newParent = current;
         current = myParent;
         myParent = myParent->parent;
