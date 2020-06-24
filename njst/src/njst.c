@@ -42,9 +42,7 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
         if (root == 1) {
             tagAndRoot(trees[i]);
         } else if (root == 2) {
-            printf("leaves: %d\n", trees[i]->numberOfLeaves);
             mad(&trees[i]);
-            printf("leaves: %d\n\n", trees[i]->numberOfLeaves);
         }
         
         if (tag) {
