@@ -24,7 +24,8 @@ int main(int argc, char **argv) {
     int square = 0;
     int ustar = 0;
     double miniPairs = 0;
-    while((c = getopt(argc,argv,"ubmtsc:r:w:p:n:o:i:"))!=-1) {
+    double quartil = 0;
+    while((c = getopt(argc,argv,"ubmtsq:c:r:w:p:n:o:i:"))!=-1) {
         switch(c) {
             case 'i':
                 input = optarg;
@@ -40,6 +41,10 @@ int main(int argc, char **argv) {
                 break;
             case 'p':
                 miniPairs = atof(optarg);
+                break;
+            case 'q':
+                miniPairs = atof(optarg);
+                break;
             case 's':
                 square = 1;
                 break;
@@ -73,7 +78,7 @@ int main(int argc, char **argv) {
         // Declare root for species tree
         struct node *speciestree = (struct node*) calloc(sizeof(struct node), 1);
         
-        inferSpeciesTreeFromGeneTrees(&speciestree, input, mini, ustar, norm, branchLength, weight, square, tag, root, miniPairs);
+        inferSpeciesTreeFromGeneTrees(&speciestree, input, mini, ustar, norm, branchLength, weight, square, tag, root, miniPairs, quartil);
         
         if (errno != 0) {
             return errno;

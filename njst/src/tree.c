@@ -804,6 +804,7 @@ static void removeSibling(struct node *sibling, struct node *parent) {
 
 static void madRoot(struct node **root, int topId, double rho) {
     // TODO: keep branch lengths
+    rho = rho * 1;
     
     // Find node where new root should be inserted
     struct node *current;

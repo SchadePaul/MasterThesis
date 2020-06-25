@@ -5,13 +5,11 @@
 #include "tree.h"
 #include "njst.h"
 
-static double const percentage = 1.5;
-
-
 void stepByStep(const char *geneFile, const char *speciesFile);
-int compare( const void* a, const void* b);
+static int compare( const void* a, const void* b);
+static int compare2( const void* a, const void* b);
 
-int compare( const void* a, const void* b) {
+static int compare( const void* a, const void* b) {
      int int_a = * ( (int*) a );
      int int_b = * ( (int*) b );
 
@@ -20,7 +18,7 @@ int compare( const void* a, const void* b) {
      else return 1;
 }
 
-int compare2( const void* a, const void* b) {
+static int compare2( const void* a, const void* b) {
      int int_a = * ( (double*) a );
      int int_b = * ( (double*) b );
 
@@ -288,7 +286,7 @@ void stepByStep(const char *geneFile, const char *speciesFile) {
         }
         if (taxaDistances[muchDist[0]][muchDist[1]][2 * i] != 0) {
             counter++;
-            double relDiss = taxaDistances[muchDist[0]][muchDist[1]][2 * i + 1] / dist[ii][jj];
+//            double relDiss = taxaDistances[muchDist[0]][muchDist[1]][2 * i + 1] / dist[ii][jj];
         }
     }
     int *diss = (int *) calloc(sizeof(int), counter);

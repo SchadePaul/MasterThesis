@@ -9,9 +9,19 @@
 #include <math.h>
 
 void readFileToTrees(struct node ***trees, const char *filename, int *numberOfTrees, char ***allLeafNames, int *numberOfLeafNames);
-void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, double miniPairs);
+void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, double miniPairs, double quartil);
+static int compare( const void* a, const void* b);
 
-void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, double miniPairs) {
+static int compare( const void* a, const void* b) {
+     int int_a = * ( (double*) a );
+     int int_b = * ( (double*) b );
+
+     if ( int_a == int_b ) return 0;
+     else if ( int_a < int_b ) return -1;
+     else return 1;
+}
+
+void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, double miniPairs, double quartil) {
     // Read file and get important data (#Trees, #Taxa, Taxa)
     int numberOfTrees = 0;
     char **taxa;
@@ -240,24 +250,35 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
         for (int j = 0; j < numberOfTaxa; j++) {
             if (i < j) {
                 int count = 0;
+                double *sorted = (double *) calloc(sizeof(double), numberOfTrees);
                 for (int k = 0; k < numberOfTrees; k++) {
                     if (taxaDistances[i][j][2 * k] != 0) {
                         double currentDistance = taxaDistances[i][j][2 * k + 1];
-                        if (square == 1) {
-                            currentDistance = sqrt(currentDistance);
-                        }
-                        if (ustar) {
-                            distance[i][j] += currentDistance / taxaDistances[i][j][2 * k];
-                            count++;
+                        if (quartil != 0) {
+                            sorted[count] = currentDistance;
                         } else {
-                            distance[i][j] += currentDistance;
-                            count += taxaDistances[i][j][2 * k];
+                            if (square == 1) {
+                                currentDistance = sqrt(currentDistance);
+                            }
+                            if (ustar) {
+                                distance[i][j] += currentDistance / taxaDistances[i][j][2 * k];
+                                count++;
+                            } else {
+                                distance[i][j] += currentDistance;
+                                count += taxaDistances[i][j][2 * k];
+                            }
                         }
                     }
                 }
-                if (count != 0) {
-                    distance[i][j] = distance[i][j] / count;
+                if (quartil != 0) {
+                    qsort(sorted, count, sizeof(double), compare);
+                    distance[i][j] = sorted[(int) quartil * count];
+                } else {
+                    if (count != 0) {
+                        distance[i][j] = distance[i][j] / count;
+                    }
                 }
+                free(sorted);
             } else {
                 distance[i][j] = distance[j][i];
             }
