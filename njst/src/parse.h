@@ -3,7 +3,7 @@
 
 void readFileToArray(const char *filename, char ***newickTree, int *numberOfTrees);
 void newickTreeToTree(char *newickTree, struct node **tree, char ***allLeafNames, int *numberOfLeafNames);
-void printTree(struct node *tree);
+void printTree(struct node *tree, int length);
 void saveTree(struct node *tree, const char *name);
 int compNumberOfLeaves(struct node *current);
 

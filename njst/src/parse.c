@@ -16,8 +16,8 @@ static void addName(char *name, char ***allNames, int *currentLength);
 static int isTreeOperator(char c);
 void newickTreeToTree(char *newickTree, struct node **tree, char ***allLeafNames, int *numberOfLeafNames);
 static int maxDepth(struct node *current);
-static void fillArray(char *array, struct node *current, int width, int offsetX, int offsetY);
-void printTree(struct node *tree);
+static void fillArray(char *array, struct node *current, int width, int offsetX, int offsetY, int length);
+void printTree(struct node *tree, int length);
 void saveTree(struct node *tree, const char *name);
 
 int compNumberOfLeaves(struct node *current) {
@@ -218,23 +218,23 @@ static int maxDepth(struct node *current) {
     return max;
 }
 
-static void fillArray(char *array, struct node *current, int width, int offsetX, int offsetY) {
-    for (int i = 0; i < maxNameLength; i++) {
-        array[offsetY * width * maxNameLength + offsetX * maxNameLength + i] = current->name[i];
+static void fillArray(char *array, struct node *current, int width, int offsetX, int offsetY, int length) {
+    for (int i = 0; i < length; i++) {
+        array[offsetY * width * length + offsetX * length + i] = current->name[i];
     }
     
     if (current->firstChild != NULL) {
-        array[(offsetY + 1) * width * maxNameLength + offsetX * maxNameLength] = '|';
-        fillArray(array, current->firstChild, width, offsetX, offsetY + 2);
+        array[(offsetY + 1) * width * length + offsetX * length] = '|';
+        fillArray(array, current->firstChild, width, offsetX, offsetY + 2, length);
     }
     if (current->nextSibling != NULL) {
-        int index = (offsetY - 1) * width * maxNameLength + (offsetX + current->numberOfLeaves) * maxNameLength;
+        int index = (offsetY - 1) * width * length + (offsetX + current->numberOfLeaves) * length;
         array[index] = '\\';
-        fillArray(array, current->nextSibling, width, offsetX + current->numberOfLeaves, offsetY);
+        fillArray(array, current->nextSibling, width, offsetX + current->numberOfLeaves, offsetY, length);
         index--;
-        while (array[index - width * maxNameLength] == 0) {
-            array[index - width * maxNameLength] = '-';
-            if (index % (width * maxNameLength) == 0) {
+        while (array[index - width * length] == 0) {
+            array[index - width * length] = '-';
+            if (index % (width * length) == 0) {
                 break;
             }
             index--;
@@ -243,14 +243,14 @@ static void fillArray(char *array, struct node *current, int width, int offsetX,
     }
 }
 
-void printTree(struct node *tree) {
+void printTree(struct node *tree, int length) {
     int depth = maxDepth(tree);
     int terminalNodes = compNumberOfLeaves(tree);
-    char *array = calloc(sizeof(char), depth * terminalNodes * maxNameLength * 2 - 1);
-    fillArray(array, tree, terminalNodes, 0, 0);
+    char *array = calloc(sizeof(char), depth * terminalNodes * length * 2 - 1);
+    fillArray(array, tree, terminalNodes, 0, 0, length);
     for (int i = 0; i < depth * 2; i++) {
-        for (int j = 0; j < terminalNodes * maxNameLength; j++) {
-            char c = array[i * terminalNodes * maxNameLength + j];
+        for (int j = 0; j < terminalNodes * length; j++) {
+            char c = array[i * terminalNodes * length + j];
             if (c != 0) {
                 printf("%c", c);
             } else {
@@ -261,6 +261,9 @@ void printTree(struct node *tree) {
     }
     free(array);
 }
+
+
+
 
 void saveTree(struct node *tree, const char *name) {
     FILE *f = fopen(name, "w");

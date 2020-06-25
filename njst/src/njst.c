@@ -31,7 +31,6 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
     }
     
     for (int i = 0; i < numberOfTrees; i++) {
-        printf("%d\n", i);
         // Number of Leaves in this tree
         int size = trees[i]->numberOfLeaves;
         

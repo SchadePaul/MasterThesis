@@ -845,7 +845,6 @@ static void madRoot(struct node **root, int topId, double rho) {
         if (myParent != 0) {
             myParent = myParent->parent;
         }
-        myParent = myParent->parent;
     }
     (*root) = newRoot;
     compNumberOfLeaves(*root);
