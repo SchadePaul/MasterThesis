@@ -720,19 +720,20 @@ static double rms(struct node *root, struct node *node, double **dist, double **
     
     
     // Calculate rho
+    double tmp2 = 0.0;
+    for (int bb = indexI_1; bb < indexI_2; bb++) {
+        for (int cc = 0; cc < root->numberOfNodes; cc++) {
+            if ((cc < indexI_1 || cc >= indexI_2) && indexOfId[bb] != -1 && indexOfId[cc] != -1) {
+                tmp2 += 1 / pow(dist[bb][cc], 2.0);
+            }
+        }
+    }
     
     for (int b = indexI_1; b < indexI_2; b++) {
         for (int c = 0; c < root->numberOfNodes; c++) {
             double tmp = (dist[b][c] - 2 * dist[b][i]) / pow(dist[b][c], 2.0);
             if ((c < indexI_1 || c >= indexI_2) && indexOfId[b] != -1 && indexOfId[c] != -1) {
-                double tmp2 = 0.0;
-                for (int bb = indexI_1; bb < indexI_2; bb++) {
-                    for (int cc = 0; cc < root->numberOfNodes; cc++) {
-                        if ((cc < indexI_1 || cc >= indexI_2) && indexOfId[bb] != -1 && indexOfId[cc] != -1) {
-                            tmp2 += 1 / pow(dist[bb][cc], 2.0);
-                        }
-                    }
-                }
+                
                 tmp = tmp / (2 * distIJ * tmp2);
                 *rho += tmp;
             }
