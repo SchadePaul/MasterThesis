@@ -9,7 +9,7 @@
 #include <math.h>
 
 void readFileToTrees(struct node ***trees, const char *filename, int *numberOfTrees, char ***allLeafNames, int *numberOfLeafNames);
-void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, double miniPairs, double quartil);
+void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, double miniPairs, double quartil, int closeFriends);
 static int compare( const void* a, const void* b);
 
 static int compare( const void* a, const void* b) {
@@ -21,7 +21,7 @@ static int compare( const void* a, const void* b) {
      else return 1;
 }
 
-void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, double miniPairs, double quartil) {
+void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filename, int mini, int ustar, int norm, int branchLength, int weight, int square, int tag, int root, double miniPairs, double quartil, int closeFriends) {
     // Read file and get important data (#Trees, #Taxa, Taxa)
     int numberOfTrees = 0;
     char **taxa;
@@ -213,7 +213,19 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
                         if (square == 1) {
                             currentDistance = pow(dist[j][k], 2.0);
                         }
+                        if (closeFriends != 0) {
+                            if (currentDistance > closeFriends) {
+                                currentDistance = closeFriends * 2;
+                            }
+                        }
                         if (mini) {
+                            if (taxaDistances[ii][jj][2 * i + 1] > currentDistance * weightFactor / normFactor) {
+                                taxaDistances[ii][jj][2 * i + 1] = currentDistance * weightFactor / normFactor;
+                            } else if (taxaDistances[ii][jj][2 * i + 1] == 0) {
+                                taxaDistances[ii][jj][2 * i + 1] = currentDistance * weightFactor / normFactor;
+                                taxaDistances[ii][jj][2 * i] = 1 * weightFactor;
+                            }
+                        } else if (closeFriends != 0) {
                             if (taxaDistances[ii][jj][2 * i + 1] > currentDistance * weightFactor / normFactor) {
                                 taxaDistances[ii][jj][2 * i + 1] = currentDistance * weightFactor / normFactor;
                             } else if (taxaDistances[ii][jj][2 * i + 1] == 0) {
@@ -284,19 +296,7 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
             }
         }
     }
-//    printf("\t");
-//    for (int i = 0; i < numberOfTaxa; i++) {
-//        printf("%s\t", taxa[i]);
-//    }
-//
-//    printf("\n\n");
-//    for (int i = 0; i < numberOfTaxa; i++) {
-//        printf("%s\t", taxa[i]);
-//        for (int j = 0; j < numberOfTaxa; j++) {
-//            printf("%d\t", (int) distance[i][j]);
-//        }
-//        printf("\n");
-//    }
+
     makeTreeFromDistanceArray(distance, numberOfTaxa, speciesTree, taxa);
     
     for (int i = 0; i < numberOfTaxa; i++) {
