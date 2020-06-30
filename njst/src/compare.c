@@ -40,6 +40,7 @@ void stepByStep(const char *geneFile, const char *speciesFile) {
     char **speciesTaxa;
     int numberOfSpeciesTaxa = 0;
     struct node **speciesTree;
+    int *appearances = (int *) calloc(sizeof(int), numberOfTaxa);
     
     readFileToTrees(&speciesTree, speciesFile, &numberOfSpeciesTree, &speciesTaxa, &numberOfSpeciesTaxa);
     
@@ -69,15 +70,22 @@ void stepByStep(const char *geneFile, const char *speciesFile) {
         // Compute leaf distances
         leafToLeafDistance(trees[i], dist, taxaInTree, 0);
         
+        int *appearancesInTree = (int *) calloc(sizeof(int), numberOfTaxa);
+        
         // Find taxon in taxa
         int *indexInTaxa = (int *) calloc(sizeof(int), size);
         for (int j = 0; j < size; j++) {
             for (int k = 0; k < numberOfTaxa; k++) {
                 if (strcmp(taxaInTree[j], taxa[k]) == 0) {
                     indexInTaxa[j] = k;
+                    appearancesInTree[k] = 1;
                     break;
                 }
             }
+        }
+        
+        for (int j = 0; j < numberOfTaxa; j++) {
+            appearances[j] += appearancesInTree[j];
         }
         
         for (int j = 0; j < size; j++) {
@@ -123,15 +131,14 @@ void stepByStep(const char *geneFile, const char *speciesFile) {
                 for (int k = 0; k < numberOfTrees; k++) {
                     if (taxaDistances[i][j][2 * k] != 0) {
                         allDiss[count] = taxaDistances[i][j][2 * k + 1];
-//                        double currentDistance = taxaDistances[i][j][2 * k + 1];
-//                        distance[i][j] += currentDistance;
-//                        count += taxaDistances[i][j][2 * k];
-                        count++;
+                        double currentDistance = taxaDistances[i][j][2 * k + 1];
+                        distance[i][j] += currentDistance;
+                        count += taxaDistances[i][j][2 * k];
                     }
                 }
                 if (count != 0) {
-                    qsort(allDiss, count, sizeof(double), compare2);
-                    distance[i][j] = allDiss[5 * count / 10];
+//                    qsort(allDiss, count, sizeof(double), compare2);
+                    distance[i][j] = distance[i][j] / count;
                 }
             } else {
                 distance[i][j] = distance[j][i];
@@ -158,9 +165,9 @@ void stepByStep(const char *geneFile, const char *speciesFile) {
     
     int *indexToShow = (int *) calloc(sizeof(int), numberOfSpeciesTaxa);
     
-    for (int i = 0; i < numberOfTaxa; i++) {
-        for (int j = 0; j < numberOfSpeciesTaxa; j++) {
-            if (strcmp(taxa[i], speciesTaxa[j]) == 0) {
+    for (int i = 0; i < numberOfSpeciesTaxa; i++) {
+        for (int j = 0; j < numberOfTaxa; j++) {
+            if (strcmp(speciesTaxa[i], taxa[j]) == 0) {
                 indexToShow[i] = j;
                 break;
             }
@@ -176,9 +183,9 @@ void stepByStep(const char *geneFile, const char *speciesFile) {
     
     printf("\n\n");
     for (int i = 0; i < numberOfTaxa; i++) {
-        printf("%.15s\t\t", taxa[i]);
+        printf("%.15s\t\t", taxa[indexToShow[i]]);
         for (int j = 0; j < numberOfTaxa; j++) {
-            printf("%.2f\t", distance[i][j]);
+            printf("%.2f\t", distance[indexToShow[i]][indexToShow[j]]);
         }
         printf("\n");
     }
@@ -197,14 +204,14 @@ void stepByStep(const char *geneFile, const char *speciesFile) {
     int exact = 0;
     printf("\n\n");
     for (int i = 0; i < numberOfSpeciesTaxa; i++) {
-        printf("%.15s\t\t", taxa[i]);
+        printf("%.15s\t\t", speciesTaxa[i]);
         for (int j = 0; j < numberOfSpeciesTaxa; j++) {
-            if (indexToShow[i] <= indexToShow[j]) {
-                int ii = indexToShow[i];
-                int jj = indexToShow[j] - indexToShow[i];
+            if (i <= j) {
+                int ii = i;
+                int jj = j - i;
                 double relDis = 0;
                 if (i != j) {
-                    relDis = distance[i][j] / dist[ii][jj];
+                    relDis = distance[indexToShow[i]][indexToShow[j]] / dist[ii][jj];
                 }
 //                if (relDis < 1 && relDis != 0) {
 //                    relDis = 1 / relDis;
@@ -219,21 +226,21 @@ void stepByStep(const char *geneFile, const char *speciesFile) {
                     exact++;
                 }
 
-                if (dist[ii][jj] != distance[i][j]) {
+                if (dist[ii][jj] != distance[indexToShow[i]][indexToShow[j]]) {
                     if (relDis > maxDist) {
                         maxDist = relDis;
-                        muchDist[0] = i;
-                        muchDist[1] = j;
+                        muchDist[0] = indexToShow[i];
+                        muchDist[1] = indexToShow[j];
                     }
                 }
-                printf("%.2f\t", distance[i][j] - dist[ii][jj]);
+                printf("%.2f\t", dist[ii][jj]);
                 
             } else {
-                int ii = indexToShow[j];
-                int jj = indexToShow[i] - indexToShow[j];
+                int ii = j;
+                int jj = i - j;
                 double relDis = 0;
-                if (i != j) {
-                    relDis = distance[i][j] / dist[ii][jj];
+                if (indexToShow[i] != indexToShow[j]) {
+                    relDis = distance[indexToShow[i]][indexToShow[j]] / dist[ii][jj];
                 }
 //                if (relDis < 1 && relDis != 0) {
 //                    relDis = 1 / relDis;
@@ -246,14 +253,14 @@ void stepByStep(const char *geneFile, const char *speciesFile) {
                     under++;
                 }
 
-                if (dist[ii][jj] != distance[i][j]) {
+                if (dist[ii][jj] != distance[indexToShow[i]][indexToShow[j]]) {
                     if (relDis > maxDist) {
                         maxDist = relDis;
-                        muchDist[0] = i;
-                        muchDist[1] = j;
+                        muchDist[0] = indexToShow[i];
+                        muchDist[1] = indexToShow[j];
                     }
                 }
-                printf("%.2f\t", distance[i][j] - dist[ii][jj]);
+                printf("%.2f\t", dist[ii][jj]);
             }
             printf("\033[0m");
         }
@@ -273,7 +280,7 @@ void stepByStep(const char *geneFile, const char *speciesFile) {
         relDis = 1 / relDis;
     }
     
-    printf("\nTaxa: %s\t%s\t%d\t%f\n", taxa[muchDist[0]], taxa[muchDist[1]], (int) dist[indexToShow[muchDist[0]]][indexToShow[muchDist[1]] - indexToShow[muchDist[0]]], relDis);
+//    printf("\nTaxa: %s\t%s\t%d\t%f\n", taxa[muchDist[0]], taxa[muchDist[1]], (int) dist[indexToShow[muchDist[0]]][indexToShow[muchDist[1]] - indexToShow[muchDist[0]]], relDis);
     
     int counter = 0;
     for (int i = 0; i < numberOfTrees; i++) {
@@ -307,6 +314,10 @@ void stepByStep(const char *geneFile, const char *speciesFile) {
     qsort(diss, counter, sizeof(int), compare);
     printf("over:\t %d, under:\t %d, exact:\t%d\n", over, under, exact);
     
+    printf("number of Taxa: %d \n", numberOfTaxa);
+    for (int i = 0; i < numberOfTaxa; i++) {
+        printf("%s\t%d\n", taxa[indexToShow[i]], appearances[indexToShow[i]]);
+    }
 //    for (int i = 0; i < counter; i++) {
 //        printf("%d\n", diss[i]);
 //    }

@@ -296,7 +296,7 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
             }
         }
     }
-
+//    makeTree2(distance, numberOfTaxa, speciesTree, taxa);
     makeTreeFromDistanceArray(distance, numberOfTaxa, speciesTree, taxa);
     
     for (int i = 0; i < numberOfTaxa; i++) {
