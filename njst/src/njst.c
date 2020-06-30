@@ -215,7 +215,7 @@ void inferSpeciesTreeFromGeneTrees(struct node **speciesTree, const char *filena
                         }
                         if (closeFriends != 0) {
                             if (currentDistance > closeFriends) {
-                                currentDistance = closeFriends * 2;
+                                currentDistance = closeFriends;
                             }
                         }
                         if (mini) {
