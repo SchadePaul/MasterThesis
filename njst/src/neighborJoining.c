@@ -6,158 +6,127 @@
 #include <limits.h>
 
 static void calcQ(double**q, double **distance, int size);
-static void findMinOfQ(double **q, int size, int *i, int *j);
+static void findMin(double **q, int size, int *i, int *j);
 static void join(int i, int j, struct node *root, int size, char name, double **distance);
 static void calcD(double **distance, double **newDistance, int size, int i, int j);
+static void calcD2(double **distance, double **newDistance, int size, int i, int j, struct node *root);
+static void calcD3(double **distance, double **newDistance, int size, int i, int j, struct node *root, int *weights);
 void makeTreeFromDistanceArray(double **distance, int size, struct node **root, char **names);
 void makeTree2(double **distance, int size, struct node **root, char **names);
-static void findMin(double **distance, int size, int *index_1, int *index_2);
-static void calcDistance(double **oldDistance, double **newDistance, int size, int index_1, int index_2);
-static void joiny(struct node *root, int size, int index_1, int index_2);
+void makeTree3(double **distance, int size, struct node **root, char **names);
 
-static void joiny(struct node *root, int size, int index_1, int index_2) {
-    printf("join at size\t%d\t%d\t%d\n", size, index_1, index_2);
-    struct node *new = (struct node *) calloc(sizeof(struct node), 1);
-    new->name[0] = placeholderName;
-    new->distToParent = 1;
-    struct node *a;
-    struct node *b;
 
-    struct node *current = root->firstChild;
-
-    for (int i = 0; i < size; i++) {
-        struct node *next = current->nextSibling;
-        if (i == 0 && index_1 == 0) {
-            a = current;
-            if (index_2 == 1) {
-                b = next;
-                root->firstChild = new;
-                new->nextSibling = b->nextSibling;
-                break;
-            } else {
-                root->firstChild = new;
-                new->nextSibling = next;
-                current = next;
-                continue;
-            }
-        }
-        
-        if (i == index_1 - 1) {
-            a = next;
-            next = next->nextSibling;
-            current->nextSibling = new;
-            current = new;
-            i++;
-            if (i == index_2 - 1) {
-                b = next;
-                next = next->nextSibling;
-                i++;
-            }
-        } else if (i == index_2 - 1){
-            b = next;
-            next = next->nextSibling;
-            i++;
-        }
-        current->nextSibling = next;
-        current = next;
+//UPGMA TODO
+void makeTree3(double **distance, int size, struct node **root, char **names) {
+    if (size == 0) {
+        return;
     }
     
-    new->firstChild = a;
-    a->nextSibling = b;
-    b->nextSibling = 0;
-    a->parent = new;
-    b->parent = new;
-    
-    
-}
-
-static void calcDistance(double **oldDistance, double **newDistance, int size, int index_1, int index_2) {
+    int *weights = (int *) calloc(sizeof(int), size);
     for (int i = 0; i < size; i++) {
-        int ii = i;
-        if (i == index_2) {
-            ii = index_1;
-        } else if (i > index_2) {
-            ii--;
-        }
-        for (int j = 0; j < size; j++) {
-            int jj = j;
-            if (j == index_2) {
-                jj = index_1;
-            } else if (j > index_2) {
-                jj--;
-            }
-            if (newDistance[ii][jj] == 0 || oldDistance[i][j] < newDistance[ii][jj]) {
-                newDistance[ii][jj] = oldDistance[i][j];
-            }
-            oldDistance[i][j] = 0;
+        weights[i] = 1;
+    }
+    
+    char name = placeholderName;
+    (*root)->firstChild = (struct node *) calloc(sizeof(struct node), 1);
+    struct node *current = (*root)->firstChild;
+    double **currentDistance = (double**) calloc(sizeof(double*), size);
+    double **newDistance = (double**) calloc(sizeof(double*), size);
+    double **q = (double**) calloc(sizeof(double*), size);
+    for (int i = 0; i < size; i++) {
+        currentDistance[i] = (double*) calloc(sizeof(double), size);
+        newDistance[i] = (double*) calloc(sizeof(double), size);
+        q[i] = (double*) calloc(sizeof(double), size);
+        current->parent = *root;
+        strcpy(current->name, names[i]);
+        if (i < size - 1) {
+            current->nextSibling = (struct node *) calloc(sizeof(struct node), 1);
+            current = current->nextSibling;
         }
     }
-}
+    int *i = calloc(sizeof(int), 1);
+    int *j = calloc(sizeof(int), 1);
+    int currentSize = size;
 
-static void findMin(double **distance, int size, int *index_1, int *index_2) {
-    int min = INT_MAX;
-    for (int i = 0; i < size; i++) {
-        for (int j = i + 1; j < size; j++) {
-            if (distance[i][j] < min) {
-                min = distance[i][j];
-                *index_1 = i;
-                *index_2 = j;
-            }
-        }
+    while (currentSize > 2) {
+        findMin(distance, currentSize, i ,j);
+        join(*i, *j, *root, currentSize, name, distance);
+        currentSize--;
+        calcD3(distance, newDistance,currentSize,*i,*j, (*root), weights);
+        double **tmp = distance;
+        distance = newDistance;
+        newDistance = tmp;
     }
+    
+    (*root)->firstChild->distToParent = distance[0][1];
+    (*root)->firstChild->parent = (*root);
+    (*root)->firstChild->nextSibling->parent = (*root);
+    (*root)->name[0] = placeholderName;
+    
+    for (int i = 0; i < size; i++) {
+        free(currentDistance[i]);
+        free(distance[i]);
+        free(q[i]);
+    }
+    free(currentDistance);
+    free(distance);
+    free(q);
+    free(i);
+    free(j);
 }
 
+
+// WPGMA
 void makeTree2(double **distance, int size, struct node **root, char **names) {
     if (size == 0) {
         return;
-    } else {
-        printf("size: %d\n", size);
     }
-    double **distance_1 = (double **) calloc(sizeof(double *), size);
-    double **distance_2 = (double **) calloc(sizeof(double *), size);
+    char name = placeholderName;
+    (*root)->firstChild = (struct node *) calloc(sizeof(struct node), 1);
+    struct node *current = (*root)->firstChild;
+    double **currentDistance = (double**) calloc(sizeof(double*), size);
+    double **newDistance = (double**) calloc(sizeof(double*), size);
+    double **q = (double**) calloc(sizeof(double*), size);
     for (int i = 0; i < size; i++) {
-        distance_1[i] = (double *) calloc(sizeof(double), size);
-        distance_2[i] = (double *) calloc(sizeof(double), size);
-        for (int j = 0; j < size; j++) {
-            distance_1[i][j] = distance[i][j];
+        currentDistance[i] = (double*) calloc(sizeof(double), size);
+        newDistance[i] = (double*) calloc(sizeof(double), size);
+        q[i] = (double*) calloc(sizeof(double), size);
+        current->parent = *root;
+        strcpy(current->name, names[i]);
+        if (i < size - 1) {
+            current->nextSibling = (struct node *) calloc(sizeof(struct node), 1);
+            current = current->nextSibling;
         }
     }
-    struct node *current = (struct node *) calloc(sizeof(struct node), 1);
-    strcpy(current->name, names[0]);
+    int *i = calloc(sizeof(int), 1);
+    int *j = calloc(sizeof(int), 1);
+    int currentSize = size;
+
+    while (currentSize > 2) {
+        findMin(distance, currentSize, i ,j);
+        join(*i, *j, *root, currentSize, name, distance);
+        currentSize--;
+        calcD2(distance, newDistance,currentSize,*i,*j, (*root));
+        double **tmp = distance;
+        distance = newDistance;
+        newDistance = tmp;
+    }
+    
+    (*root)->firstChild->distToParent = distance[0][1];
+    (*root)->firstChild->parent = (*root);
+    (*root)->firstChild->nextSibling->parent = (*root);
     (*root)->name[0] = placeholderName;
-    (*root)->firstChild = current;
-    current->parent = *root;
-    current->distToParent = 1;
-    for (int i = 1; i < size; i++) {
-        struct node *next = (struct node *) calloc(sizeof(struct node), 1);
-        strcpy(next->name, names[i]);
-        current->nextSibling = next;
-        next->parent = *root;
-        current = next;
-        current->distToParent = 1;
-    }
-    
-    for (int i = 0; i < size - 2; i++) {
-        int index_1;
-        int index_2;
-        findMin(distance_1, size - i, &index_1, &index_2);
-        calcDistance(distance_1, distance_2, size - i, index_1, index_2);
-        double **tmp = distance_1;
-        distance_1 = distance_2;
-        distance_2 = tmp;
-        joiny(*root, size - i, index_1, index_2);
-//        compNumberOfLeaves(*root);
-//        printTree(*root, 4);
-    }
-    
-    compNumberOfLeaves(*root);
     
     for (int i = 0; i < size; i++) {
-        free(distance_1[i]);
-        free(distance_2[i]);
+        free(currentDistance[i]);
+        free(distance[i]);
+        free(q[i]);
     }
-    free(distance_1);
-    free(distance_2);
+    free(currentDistance);
+    free(distance);
+    free(q);
+    free(i);
+    free(j);
 }
 
 static void calcQ(double**q, double **distance, int size) {
@@ -176,7 +145,7 @@ static void calcQ(double**q, double **distance, int size) {
     }
 }
 
-static void findMinOfQ(double **q, int size, int *i, int *j) {
+static void findMin(double **q, int size, int *i, int *j) {
     double min = (double) INT_MAX;
     for (int ii = 0; ii < size; ii++) {
         for (int jj = ii + 1; jj < size; jj++) {
@@ -190,6 +159,7 @@ static void findMinOfQ(double **q, int size, int *i, int *j) {
 }
 
 static void join(int i, int j, struct node *root, int size, char name, double **distance) {
+    printf("join %d\t%d\n", i, j);
     struct node *newNode = (struct node*) calloc(sizeof(struct node), 1);
     struct node *current = root->firstChild;
     root->firstChild = newNode;
@@ -232,6 +202,125 @@ static void join(int i, int j, struct node *root, int size, char name, double **
     }
     
 }
+
+static void calcD3(double **distance, double **newDistance, int size, int i, int j, struct node *root, int *weights) {
+    for (int ii = 0; ii < size; ii++) {
+        for (int jj = 0; jj < size; jj++) {
+            int adjustI = -1 + (ii > i) + (ii >= j);
+            int adjustJ = -1 + (jj > i) + (jj >= j);
+            if (ii == jj) {
+                newDistance[ii][jj] = 0;
+            } else if (ii == 0) {
+//                if (distance[i][jj + adjustJ] > distance[j][jj + adjustJ]) {
+//                    newDistance[ii][jj] = distance[i][jj + adjustJ];
+//                } else {
+//                    newDistance[ii][jj] = distance[j][jj + adjustJ];
+//                }
+                newDistance[ii][jj] = (distance[i][jj + adjustJ] * weights[i] + distance[j][jj + adjustJ] * weights[j]) / (weights[i] + weights[j]);
+            } else if (jj == 0) {
+//                if (distance[i][ii + adjustI] > distance[j][ii + adjustI]) {
+//                    newDistance[ii][jj] = distance[i][ii + adjustI];
+//                } else {
+//                    newDistance[ii][jj] = distance[j][ii + adjustI];
+//                }
+                newDistance[ii][jj] = (distance[i][ii + adjustI] * weights[i] + distance[j][ii + adjustI] * weights[j]) / (weights[i] + weights[j]);
+            } else {
+                newDistance[ii][jj] = distance[ii + adjustI][jj + adjustJ];
+            }
+        }
+    }
+    int *tmp = calloc(sizeof(int), size);
+    tmp[0] = weights[i] + weights[j];
+    for (int ii = 1; ii < size; ii++) {
+        int adjustI = -1 + (ii > i) + (ii >= j);
+        tmp[ii] = weights[i + adjustI];
+    }
+    for (int ii = 0; ii < size; ii++) {
+        weights[ii] = tmp[ii];
+    }
+    free(tmp);
+    printf("\t");
+    struct node *current = root->firstChild;
+    for (int i = 0; i < size; i++) {
+        printf("%s\t", current->name);
+        current = current->nextSibling;
+    }
+    printf("\n\n");
+    
+    for (int i = 0; i < size; i++) {
+        printf("\t");
+        double min = 3020203;
+        for (int j = 0; j < size; j++) {
+            if (newDistance[i][j] < min && newDistance[i][j] != 0) {
+                min = newDistance[i][j];
+            }
+        }
+        for (int j = 0; j < size; j++) {
+            if (newDistance[i][j] == min) {
+                printf("\033[1m\033[31m");
+            }
+            printf("%.2f\t", newDistance[i][j]);
+            printf("\033[0m");
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+static void calcD2(double **distance, double **newDistance, int size, int i, int j, struct node *root) {
+    for (int ii = 0; ii < size; ii++) {
+        for (int jj = 0; jj < size; jj++) {
+            int adjustI = -1 + (ii > i) + (ii >= j);
+            int adjustJ = -1 + (jj > i) + (jj >= j);
+            if (ii == jj) {
+                newDistance[ii][jj] = 0;
+            } else if (ii == 0) {
+//                if (distance[i][jj + adjustJ] > distance[j][jj + adjustJ]) {
+//                    newDistance[ii][jj] = distance[i][jj + adjustJ];
+//                } else {
+//                    newDistance[ii][jj] = distance[j][jj + adjustJ];
+//                }
+                newDistance[ii][jj] = (distance[i][jj + adjustJ] + distance[j][jj + adjustJ]) / 2.0;
+            } else if (jj == 0) {
+//                if (distance[i][ii + adjustI] > distance[j][ii + adjustI]) {
+//                    newDistance[ii][jj] = distance[i][ii + adjustI];
+//                } else {
+//                    newDistance[ii][jj] = distance[j][ii + adjustI];
+//                }
+                newDistance[ii][jj] = (distance[i][ii + adjustI] + distance[j][ii + adjustI]) / 2.0;
+            } else {
+                newDistance[ii][jj] = distance[ii + adjustI][jj + adjustJ];
+            }
+        }
+    }
+    printf("\t");
+    struct node *current = root->firstChild;
+    for (int i = 0; i < size; i++) {
+        printf("%s\t", current->name);
+        current = current->nextSibling;
+    }
+    printf("\n\n");
+    
+    for (int i = 0; i < size; i++) {
+        printf("\t");
+        double min = 3020203;
+        for (int j = 0; j < size; j++) {
+            if (newDistance[i][j] < min && newDistance[i][j] != 0) {
+                min = newDistance[i][j];
+            }
+        }
+        for (int j = 0; j < size; j++) {
+            if (newDistance[i][j] == min) {
+                printf("\033[1m\033[31m");
+            }
+            printf("%.2f\t", newDistance[i][j]);
+            printf("\033[0m");
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
 
 static void calcD(double **distance, double **newDistance, int size, int i, int j) {
     for (int ii = 0; ii < size; ii++) {
@@ -279,7 +368,7 @@ void makeTreeFromDistanceArray(double **distance, int size, struct node **root, 
 
     while (currentSize > 2) {
         calcQ(q, distance, currentSize);
-        findMinOfQ(q, currentSize, i ,j);
+        findMin(q, currentSize, i ,j);
         join(*i, *j, *root, currentSize, name, distance);
         currentSize--;
         calcD(distance, newDistance,currentSize,*i,*j);

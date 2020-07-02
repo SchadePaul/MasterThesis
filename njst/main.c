@@ -75,22 +75,24 @@ int main(int argc, char **argv) {
                 break;
         }
     }
-
-    if (compare != 0) {
-        stepByStep(input, compare);
-    } else {
-        // Declare root for species tree
-        struct node *speciestree = (struct node*) calloc(sizeof(struct node), 1);
-        
-        inferSpeciesTreeFromGeneTrees(&speciestree, input, mini, ustar, norm, branchLength, weight, square, tag, root, miniPairs, quartil, closeFriends);
-        
-        if (errno != 0) {
-            return errno;
-        }
-        saveTree(speciestree, output);
-        
-        freeTree(speciestree);
-    }
+    struct node *speciestree = (struct node*) calloc(sizeof(struct node), 1);
+    test(&speciestree, input);
+    saveTree(speciestree, output);
+//    if (compare != 0) {
+//        stepByStep(input, compare);
+//    } else {
+//        // Declare root for species tree
+//        struct node *speciestree = (struct node*) calloc(sizeof(struct node), 1);
+//
+//        inferSpeciesTreeFromGeneTrees(&speciestree, input, mini, ustar, norm, branchLength, weight, square, tag, root, miniPairs, quartil, closeFriends);
+//
+//        if (errno != 0) {
+//            return errno;
+//        }
+//        saveTree(speciestree, output);
+//
+//        freeTree(speciestree);
+//    }
     
     return 0;
 }
