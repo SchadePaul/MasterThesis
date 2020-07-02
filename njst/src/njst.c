@@ -107,7 +107,7 @@ void test(struct node **speciesTree, const char *filename) {
         distance[i] = (double *) calloc(sizeof(double), numberOfTaxa);
     }
 
-    printf("farDistances\n");
+//    printf("farDistances\n");
     for (int i = 0; i < numberOfTaxa; i++) {
         for (int j = 0; j < numberOfTaxa; j++) {
             if (i < j) {
@@ -117,16 +117,16 @@ void test(struct node **speciesTree, const char *filename) {
                         double currentDistance = taxaDistances[i][j][2 * k + 1];
                         distance[i][j] += currentDistance;
                         count += taxaDistances[i][j][2 * k];
-                        if ((i == 5 && j == 13) || (i == 8 && j == 34)) {
-                            if (currentDistance > 7) {
-                                if (i == 5) {
-                                    printf("K L \t%d\t %.2f\n", k, currentDistance);
-                                } else {
-                                    printf("I H \t%d\t %.2f\n", k, currentDistance);
-                                }
-                                
-                            }
-                        }
+//                        if ((i == 5 && j == 13) || (i == 8 && j == 34)) {
+//                            if (currentDistance > 7) {
+//                                if (i == 5) {
+//                                    printf("K L \t%d\t %.2f\n", k, currentDistance);
+//                                } else {
+//                                    printf("I H \t%d\t %.2f\n", k, currentDistance);
+//                                }
+//
+//                            }
+//                        }
                     }
                 }
                 if (count != 0) {
@@ -138,37 +138,37 @@ void test(struct node **speciesTree, const char *filename) {
         }
     }
     
-    printf("\n\n");
-    
-    printf("\t");
-    for (int i = 0; i < numberOfTaxa; i++) {
-        printf("%s\t", taxa[i]);
-    }
-    printf("\n\n");
-    
-    for (int i = 0; i < numberOfTaxa; i++) {
-        printf("%s\t", taxa[i]);
-        double min = DBL_MAX;
-        for (int j = 0; j < numberOfTaxa; j++) {
-            if (distance[i][j] < min && distance[i][j] != 0) {
-                min = distance[i][j];
-            }
-        }
-        for (int j = 0; j < numberOfTaxa; j++) {
-            if (distance[i][j] == min) {
-                printf("\033[1m\033[31m");
-            }
-            printf("%.2f\t", distance[i][j]);
-            printf("\033[0m");
-        }
-        printf("\n");
-    }
-    printf("\n");
+//    printf("\n\n");
+//
+//    printf("\t");
+//    for (int i = 0; i < numberOfTaxa; i++) {
+//        printf("%s\t", taxa[i]);
+//    }
+//    printf("\n\n");
+//
+//    for (int i = 0; i < numberOfTaxa; i++) {
+//        printf("%s\t", taxa[i]);
+//        double min = DBL_MAX;
+//        for (int j = 0; j < numberOfTaxa; j++) {
+//            if (distance[i][j] < min && distance[i][j] != 0) {
+//                min = distance[i][j];
+//            }
+//        }
+//        for (int j = 0; j < numberOfTaxa; j++) {
+//            if (distance[i][j] == min) {
+//                printf("\033[1m\033[31m");
+//            }
+//            printf("%.2f\t", distance[i][j]);
+//            printf("\033[0m");
+//        }
+//        printf("\n");
+//    }
+//    printf("\n");
     
     makeTree2(distance, numberOfTaxa, speciesTree, taxa);
 //    makeTreeFromDistanceArray(distance, numberOfTaxa, speciesTree, taxa);
         
-    printTree(*speciesTree, 4);
+//    printTree(*speciesTree, 4);
     
     for (int i = 0; i < numberOfTaxa; i++) {
         for (int j = 0; j < numberOfTaxa; j++) {

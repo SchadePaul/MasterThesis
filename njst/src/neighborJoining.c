@@ -159,7 +159,7 @@ static void findMin(double **q, int size, int *i, int *j) {
 }
 
 static void join(int i, int j, struct node *root, int size, char name, double **distance) {
-    printf("join %d\t%d\n", i, j);
+//    printf("join %d\t%d\n", i, j);
     struct node *newNode = (struct node*) calloc(sizeof(struct node), 1);
     struct node *current = root->firstChild;
     root->firstChild = newNode;
@@ -239,32 +239,32 @@ static void calcD3(double **distance, double **newDistance, int size, int i, int
         weights[ii] = tmp[ii];
     }
     free(tmp);
-    printf("\t");
-    struct node *current = root->firstChild;
-    for (int i = 0; i < size; i++) {
-        printf("%s\t", current->name);
-        current = current->nextSibling;
-    }
-    printf("\n\n");
-    
-    for (int i = 0; i < size; i++) {
-        printf("\t");
-        double min = 3020203;
-        for (int j = 0; j < size; j++) {
-            if (newDistance[i][j] < min && newDistance[i][j] != 0) {
-                min = newDistance[i][j];
-            }
-        }
-        for (int j = 0; j < size; j++) {
-            if (newDistance[i][j] == min) {
-                printf("\033[1m\033[31m");
-            }
-            printf("%.2f\t", newDistance[i][j]);
-            printf("\033[0m");
-        }
-        printf("\n");
-    }
-    printf("\n");
+//    printf("\t");
+//    struct node *current = root->firstChild;
+//    for (int i = 0; i < size; i++) {
+//        printf("%s\t", current->name);
+//        current = current->nextSibling;
+//    }
+//    printf("\n\n");
+//
+//    for (int i = 0; i < size; i++) {
+//        printf("\t");
+//        double min = 3020203;
+//        for (int j = 0; j < size; j++) {
+//            if (newDistance[i][j] < min && newDistance[i][j] != 0) {
+//                min = newDistance[i][j];
+//            }
+//        }
+//        for (int j = 0; j < size; j++) {
+//            if (newDistance[i][j] == min) {
+//                printf("\033[1m\033[31m");
+//            }
+//            printf("%.2f\t", newDistance[i][j]);
+//            printf("\033[0m");
+//        }
+//        printf("\n");
+//    }
+//    printf("\n");
 }
 
 static void calcD2(double **distance, double **newDistance, int size, int i, int j, struct node *root) {
@@ -293,32 +293,32 @@ static void calcD2(double **distance, double **newDistance, int size, int i, int
             }
         }
     }
-    printf("\t");
-    struct node *current = root->firstChild;
-    for (int i = 0; i < size; i++) {
-        printf("%s\t", current->name);
-        current = current->nextSibling;
-    }
-    printf("\n\n");
-    
-    for (int i = 0; i < size; i++) {
-        printf("\t");
-        double min = 3020203;
-        for (int j = 0; j < size; j++) {
-            if (newDistance[i][j] < min && newDistance[i][j] != 0) {
-                min = newDistance[i][j];
-            }
-        }
-        for (int j = 0; j < size; j++) {
-            if (newDistance[i][j] == min) {
-                printf("\033[1m\033[31m");
-            }
-            printf("%.2f\t", newDistance[i][j]);
-            printf("\033[0m");
-        }
-        printf("\n");
-    }
-    printf("\n");
+//    printf("\t");
+//    struct node *current = root->firstChild;
+//    for (int i = 0; i < size; i++) {
+//        printf("%s\t", current->name);
+//        current = current->nextSibling;
+//    }
+//    printf("\n\n");
+//    
+//    for (int i = 0; i < size; i++) {
+//        printf("\t");
+//        double min = 3020203;
+//        for (int j = 0; j < size; j++) {
+//            if (newDistance[i][j] < min && newDistance[i][j] != 0) {
+//                min = newDistance[i][j];
+//            }
+//        }
+//        for (int j = 0; j < size; j++) {
+//            if (newDistance[i][j] == min) {
+//                printf("\033[1m\033[31m");
+//            }
+//            printf("%.2f\t", newDistance[i][j]);
+//            printf("\033[0m");
+//        }
+//        printf("\n");
+//    }
+//    printf("\n");
 }
 
 
