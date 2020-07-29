@@ -46,12 +46,10 @@ int main(int argc, char **argv) {
     }
     
     printf("input:%s\toutput:%s\tbranchLength:%d\tmini:%d\tnorm:%d\tweight:%d\n", input, output, branchLength, mini, norm, weight);
-    for (int counter = 0; counter < 10000; counter++) {
-        struct node *speciestree = (struct node*) calloc(sizeof(struct node), 1);
-        calcSpeciesTree(&speciestree, input, branchLength, mini, norm, weight);
-        saveTree(speciestree, output);
-        freeTree(speciestree);
-    }
+    struct node *speciestree = (struct node*) calloc(sizeof(struct node), 1);
+    calcSpeciesTree(&speciestree, input, branchLength, mini, norm, weight);
+    saveTree(speciestree, output);
+    freeTree(speciestree);
     return 0;
 }
 
