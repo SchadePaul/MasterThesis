@@ -47,6 +47,7 @@ int main(int argc, char **argv) {
     
     printf("input:%s\toutput:%s\tbranchLength:%d\tmini:%d\tnorm:%d\tweight:%d\n", input, output, branchLength, mini, norm, weight);
     struct node *speciestree = (struct node*) calloc(sizeof(struct node), 1);
+    printf("cha\n");
     calcSpeciesTree(&speciestree, input, branchLength, mini, norm, weight);
     saveTree(speciestree, output);
     freeTree(speciestree);

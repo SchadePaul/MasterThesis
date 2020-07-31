@@ -11,17 +11,17 @@
 #include <float.h>
 
 void calcSpeciesTree(struct node **speciesTree, const char *filename, int branchLength, int mini, int norm, int weight);
-static void readFileToTrees(struct node ***trees, const char *filename, int *numberOfTrees, char ***allLeafNames, int *numberOfLeafNames);
 
 
 void calcSpeciesTree(struct node **speciesTree, const char *filename, int branchLength, int mini, int norm, int weight) {
     
     int numberOfTrees = 0;
     char **taxa;
-    int numberOfTaxa;
+    int numberOfTaxa = 0;
     struct node **trees;
+    readFileToTrees(filename, &trees, &taxa, &numberOfTrees, &numberOfTaxa);
     
-    readFileToTrees(&trees, filename, &numberOfTrees, &taxa, &numberOfTaxa);
+    printf("number of Trees: %d\nnumber of Taxa: %d\n", numberOfTrees, numberOfTaxa);
     
     double ***taxaDistances = (double ***) calloc(sizeof(double **), (size_t) numberOfTaxa);
     for (int i = 0; i < numberOfTaxa; i++) {
@@ -157,28 +157,5 @@ void calcSpeciesTree(struct node **speciesTree, const char *filename, int branch
     free(distance);
     free(taxaDistances);
     free(taxa);
-    
-}
-
-
-
-
-static void readFileToTrees(struct node ***trees, const char *filename, int *numberOfTrees, char ***allLeafNames, int *numberOfLeafNames) {
-    // read file to array of chars
-    char **newickTree;
-    readFileToArray(filename, &newickTree, numberOfTrees);
-    
-    if (errno != 0) {
-        return;
-    }
-    
-    // array of chars to trees
-    *trees = (struct node **) calloc(sizeof(struct node *), *numberOfTrees);
-    for (int i = 0; i < *numberOfTrees; i++) {
-        // parse newick format to tree, add leaf names to allLeafNamesArray
-        newickTreeToTree(newickTree[i], &((*trees)[i]), allLeafNames, numberOfLeafNames);
-        free(newickTree[i]);
-    }
-    free(newickTree);
     
 }
