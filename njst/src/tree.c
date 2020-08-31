@@ -245,7 +245,7 @@ int subScoreAndTag2(struct node *current, char **names, int *index) {
                 score += checker;
             }
         }
-        
+        free(indices);
     } else {
         strcpy(names[*index], current->name);
     }
@@ -267,6 +267,7 @@ int scoreAndTag2(struct node *tree) {
         free(names[i]);
     }
     free(names);
+    free(index);
     return score;
 }
 
@@ -848,6 +849,7 @@ static void madRoot(struct node **root, int topId, double rho) {
             myParent = myParent->parent;
         }
     }
+    //free(*root);
     (*root) = newRoot;
     compNumberOfLeaves(*root);
 }
