@@ -9,8 +9,8 @@
 #include <time.h>
 
 void freeTree(struct node *tree);
-void leafToLeafDistance(struct node *root, double **dist, char **name, char branchLength);
-void subDist(struct node *current, double **dist, char **name, char branchLength, int size, int index);
+void leafToLeafDistance(struct node *root, double **dist, char **name, char branchLength, char astralTag, char notCountTag);
+void subDist(struct node *current, double **dist, char **name, char branchLength, int size, int index, char astralTag, char notCountTag);
 void removeRoot(struct node **root);
 
 void removeRoot(struct node **root) {
@@ -47,21 +47,27 @@ void removeRoot(struct node **root) {
 }
 
 
-void subDist(struct node *current, double **dist, char **name, char branchLength, int size, int index) {
+void subDist(struct node *current, double **dist, char **name, char branchLength, int size, int index, char astralTag, char notCountTag) {
     if (current->numberOfChildren == 0) {
         strcpy(name[index], current->name);
     } else {
         struct node *child = current->firstChild;
         for (int childNo = 0; childNo < current->numberOfChildren; childNo++) {
-            if (child->parent->tag == 0) {
+            if (astralTag == 0 || (astralTag == 1 && child->parent->tag == 0)) {
                 for (int i = 0; i < index; i++) {
                     for (int j = index; j < index + child->numberOfLeaves; j++) {
                         dist[i][j - 1 - i] += (branchLength != 1) ? 1 : child->distToParent;
+                        if (notCountTag == 1 && astralTag == 1 && child->tag == 1) {
+                            dist[i][j - 1 - i] -= (branchLength != 1) ? 1 : child->distToParent;
+                        }
                     }
                 }
                 for (int i = index; i < index + child->numberOfLeaves; i++) {
                     for (int j = index + child->numberOfLeaves; j < size; j++) {
                         dist[i][j - 1 - i] += (branchLength != 1) ? 1 : child->distToParent;
+                        if (notCountTag == 1 && astralTag == 1 && child->tag == 1) {
+                            dist[i][j - 1 - i] -= (branchLength != 1) ? 1 : child->distToParent;
+                        }
                     }
                 }
             } else {
@@ -73,14 +79,14 @@ void subDist(struct node *current, double **dist, char **name, char branchLength
                     }
                 }
             }
-            subDist(child, dist, name, branchLength, size, index);
+            subDist(child, dist, name, branchLength, size, index, astralTag, notCountTag);
             index = index + child->numberOfLeaves;
             child = child->nextSibling;
         }
     }
 }
 
-void leafToLeafDistance(struct node *root, double **dist, char **name, char branchLength) {
+void leafToLeafDistance(struct node *root, double **dist, char **name, char branchLength, char astralTag, char notCountTag) {
     // LCA is counted double therefore all distances are lowered by one
     if (branchLength != 1) {
         for (int i = 0; i < root->numberOfLeaves - 1; i++) {
@@ -89,7 +95,7 @@ void leafToLeafDistance(struct node *root, double **dist, char **name, char bran
             }
         }
     }
-    subDist(root, dist, name, branchLength, root->numberOfLeaves, 0);
+    subDist(root, dist, name, branchLength, root->numberOfLeaves, 0, astralTag, notCountTag);
 }
 
 void freeTree(struct node *tree) {

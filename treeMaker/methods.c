@@ -10,7 +10,7 @@
 
 const int arrayExtends = 64;
 
-void makeTree(const char *input, char mini, char ustar, char norm, char weight, char average, char median, char mostCommon, char cluster);
+void makeTree(const char *input, char mini, char ustar, char norm, char weight, char average, char median, char mostCommon, char cluster, char root, char astralTag, char notCountTag, char branchLength);
 int compare_dbl (const void *a, const void *b);
 
 int compare_dbl (const void *a, const void *b) {
@@ -25,7 +25,7 @@ int compare_dbl (const void *a, const void *b) {
 
 
 
-void makeTree(const char *input, char mini, char ustar, char norm, char weight, char average, char median, char mostCommon, char cluster) {
+void makeTree(const char *input, char mini, char ustar, char norm, char weight, char average, char median, char mostCommon, char cluster, char toRoot, char astralTag, char notCountTag, char branchLength) {
     
     int numberOfTrees = 0;
     struct node **trees = 0;
@@ -51,13 +51,12 @@ void makeTree(const char *input, char mini, char ustar, char norm, char weight, 
     
     for (int treeNumber = 0; treeNumber < numberOfTrees; treeNumber++) {
         
-        // TODO: root and tag
+        // TODO: MADRoot
         
-        
-        if (treeNumber < 1) {
-            astralTag(trees[treeNumber]);
-            printTree(trees[treeNumber], 6);
+        if (toRoot == 1) {
+            astralRoot(&(trees[treeNumber]));
         }
+        
 
         int treeSize = trees[treeNumber]->numberOfLeaves;
         
@@ -70,7 +69,7 @@ void makeTree(const char *input, char mini, char ustar, char norm, char weight, 
             treeDistances[i] = (double *) calloc(sizeof(double), treeSize - 1 - i);
         }
         
-        leafToLeafDistance(trees[treeNumber], treeDistances, treeSpeciesNames, 0);
+        leafToLeafDistance(trees[treeNumber], treeDistances, treeSpeciesNames, branchLength, astralTag, notCountTag);
         
         int *speciesIndices = (int *) calloc(sizeof(int), treeSize);
         for (int i = 0; i < treeSize; i++) {

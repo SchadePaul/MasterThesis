@@ -244,8 +244,8 @@ static void fillArray(char *array, struct node *current, int width, int offsetX,
     for (int i = 0; i < length; i++) {
         array[offsetY * width * length + offsetX * length + i] = current->name[i];
     }
-    array[offsetY * width * length + offsetX * length + (length - 3)] = (current->score / 10) + '0';
-    array[offsetY * width * length + offsetX * length + (length - 2)] = (current->score % 10) + '0';
+//    array[offsetY * width * length + offsetX * length + (length - 3)] = (current->score / 10) + '0';
+//    array[offsetY * width * length + offsetX * length + (length - 2)] = (current->score % 10) + '0';
     
     if (current->firstChild != NULL) {
         array[(offsetY + 1) * width * length + offsetX * length] = '|';

@@ -1,10 +1,100 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 #include "node.h"
+#include "tree.h"
+#include "parse.h"
+
 static int check(int index, int index2, int index3, int index4, char **names);
 static void score(struct node *thisNode, int index, char **names);
 void astralTag(struct node *root);
+void astralRoot(struct node **root);
+static void reRoot(struct node *thisNode, int *bestScore, struct node **bestRoot);
+static void traverse(struct node *newTree, struct node *oldTree, struct node *avoid);
+
+void astralRoot(struct node **root) {
+    //go to every node
+    struct node *current = (*root);
+    struct node *bestRoot = 0;
+    int bestScore = INT_MAX;
+    do {
+        while (current->firstChild != 0) {
+            current = current->firstChild;
+            reRoot(current, &bestScore, &bestRoot);
+        }
+        while (current->nextSibling == 0) {
+            current = current->parent;
+            if (current == (*root)) {
+                break;
+            }
+        }
+        if (current == (*root)) {
+            break;
+        }
+        current = current->nextSibling;
+        reRoot(current, &bestScore, &bestRoot);
+    } while (current != (*root));
+    
+    freeTree(*root);
+    (*root) = bestRoot;
+}
+
+static void reRoot(struct node *thisNode, int *bestScore, struct node **bestRoot) {
+    struct node *newRoot = (struct node *) calloc(1, sizeof(struct node));
+    newRoot->name[0] = placeholderName;
+    newRoot->firstChild = (struct node *) calloc(1, sizeof(struct node));
+    strcpy(newRoot->firstChild->name, thisNode->name);
+    newRoot->firstChild->parent = newRoot;
+    traverse(newRoot->firstChild, thisNode, thisNode->parent);
+    
+    newRoot->firstChild->nextSibling = (struct node *) calloc(1, sizeof(struct node));
+    strcpy(newRoot->firstChild->nextSibling->name, thisNode->parent->name);
+    newRoot->firstChild->nextSibling->parent = newRoot;
+    traverse(newRoot->firstChild->nextSibling, thisNode->parent, thisNode);
+    
+    compNumberOfLeaves(newRoot);
+    astralTag(newRoot);
+    if (newRoot->score < *bestScore) {
+        *bestScore = newRoot->score;
+        if (*bestRoot != 0) {
+            freeTree(*bestRoot);
+        }
+        (*bestRoot) = newRoot;
+//        printTree(newRoot, 6);
+    } else {
+        freeTree(newRoot);
+    }
+}
+
+static void traverse(struct node *newTree, struct node *oldTree, struct node *avoid) {
+    if (oldTree->parent != 0 && oldTree->parent != avoid) {
+        newTree->firstChild = (struct node *) calloc(1, sizeof(struct node));
+        newTree->firstChild->parent = newTree;
+        strcpy(newTree->firstChild->name, oldTree->parent->name);
+        newTree->firstChild->distToParent = oldTree->distToParent;
+        traverse(newTree->firstChild, oldTree->parent, oldTree);
+    }
+
+    struct node *child = oldTree->firstChild;
+    struct node *before = newTree->firstChild;
+    while (child != 0) {
+        if (child != avoid) {
+            struct node *new = (struct node *) calloc(1, sizeof(struct node));
+            new->parent = newTree;
+            strcpy(new->name, child->name);
+            new->distToParent = child->distToParent;
+            if (before == 0) {
+                newTree->firstChild = new;
+            } else {
+                before->nextSibling = new;
+            }
+            traverse(new, child, oldTree);
+            before = new;
+        }
+        child = child->nextSibling;
+    }
+}
 
 void astralTag(struct node *root) {
     int size = root->numberOfLeaves;

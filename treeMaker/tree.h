@@ -3,7 +3,7 @@
 
 void removeRoot(struct node **root);
 void freeTree(struct node *tree);
-void leafToLeafDistance(struct node *root, double **dist, char **name, char branchLength);
+void leafToLeafDistance(struct node *root, double **dist, char **name, char branchLength, char astralTag, char notCountTag);
 
 #endif
 

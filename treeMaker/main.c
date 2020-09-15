@@ -13,9 +13,9 @@ int main(int argc, char **argv) {
     char isRooted = 0;
     char hasPoly = 0;
     
-    char madRoot = 0;
-    char astralRoot = 0;
+    char root = 0;
     char astralTag = 0;
+    char notCountTag = 0;
     
     char mini = 0;
     char ustar = 0;
@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
     char cluster = 0;
     
     char c;
-    while ((c = getopt(argc,argv,"i:o:pRr:tmubsdn:w:a:c:")) != -1) {
+    while ((c = getopt(argc,argv,"i:o:pRr:tNmubsdn:w:a:c:")) != -1) {
         switch (c) {
             case 'i':
                 input = optarg;
@@ -51,14 +51,15 @@ int main(int argc, char **argv) {
                 break;
                 
             case 'r':
-                if (atoi(optarg) == 1) {
-                    astralRoot = 1;
-                } else if (atoi(optarg) == 2) {
-                    madRoot = 1;
-                }
+                // 1 = astral root
+                // 2 = mad root
+                root = atoi(optarg);
                 break;
             case 't':
                 astralTag = 1;
+                break;
+            case 'N':
+                notCountTag = 1;
                 break;
 
             case 'm':
@@ -108,6 +109,6 @@ int main(int argc, char **argv) {
         }
     }
     
-    makeTree(input, mini, ustar, norm, weight, average, median, mostCommon, cluster);
+    makeTree(input, mini, ustar, norm, weight, average, median, mostCommon, cluster, root, astralTag, notCountTag, branchLength);
     
 }
