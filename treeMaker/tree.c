@@ -99,41 +99,11 @@ void leafToLeafDistance(struct node *root, double **dist, char **name, char bran
 }
 
 void freeTree(struct node *tree) {
-    
-    struct node *before = tree;
-    struct node *current = tree;
-    int direction = 0;
-    while (before != NULL) {
-        
-        // go depth first
-        while (current->firstChild != NULL) {
-            direction = 1;
-            before = current;
-            current = current->firstChild;
-        }
-        
-        // go to next sibling and restart while loop
-        if (current->nextSibling != NULL) {
-            direction = 2;
-            before = current;
-            current = current->nextSibling;
-            continue;
-        }
-        
-        // free current node
-        free(current);
-        
-        // delete pointer to node
-        if (direction == 1) {
-            before->firstChild = NULL;
-        } else if (direction == 2) {
-            before->nextSibling = NULL;
-        } else {
-            before = NULL;
-        }
-        
-        // restart from the top
-        current = tree;
-        direction = 0;
+    if (tree->firstChild != 0) {
+        freeTree(tree->firstChild);
     }
+    if (tree->nextSibling != 0) {
+        freeTree(tree->nextSibling);
+    }
+    free(tree);
 }

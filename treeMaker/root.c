@@ -12,6 +12,45 @@ void astralTag(struct node *root);
 void astralRoot(struct node **root);
 static void reRoot(struct node *thisNode, int *bestScore, struct node **bestRoot);
 static void traverse(struct node *newTree, struct node *oldTree, struct node *avoid);
+void mad(struct node **root);
+static void nodeToNodeDist(struct node *current, double **dist, int index, int size);
+
+static void nodeToNodeDist(struct node *current, double **dist, int index, int size) {
+    if (current->numberOfChildren != 0) {
+        struct node *child = current->firstChild;
+        index++;
+        for (int childNo = 0; childNo < current->numberOfChildren; childNo++) {
+            for (int i = 0; i < index; i++) {
+                for (int j = index; j < index + child->numberOfNodes; j++) {
+                    dist[i][j - 1 - i] += child->distToParent;
+                }
+            }
+            for (int i = index; i < index + child->numberOfNodes; i++) {
+                for (int j = index + child->numberOfNodes; j < size; j++) {
+                    dist[i][j - 1 - i] += child->distToParent;
+                }
+            }
+            nodeToNodeDist(child, dist, index, size);
+            index += child->numberOfNodes;
+            child = child->nextSibling;
+        }
+    }
+}
+
+void mad(struct node **root) {
+    int size = (*root)->numberOfNodes;
+    double **nodeToNodeDistances = (double **) calloc((size_t) (size - 1), sizeof(double));
+    for (int i = 0; i < size - 1; i++) {
+        nodeToNodeDistances[i] = (double *) calloc((size_t) (size - 1 - i), sizeof(double));
+    }
+    
+    nodeToNodeDist((*root), nodeToNodeDistances, 0, size);
+    
+    for (int i = 0; i < size - 1; i++) {
+        free(nodeToNodeDistances[i]);
+    }
+    free(nodeToNodeDistances);
+}
 
 void astralRoot(struct node **root) {
     //go to every node
@@ -43,14 +82,17 @@ void astralRoot(struct node **root) {
 static void reRoot(struct node *thisNode, int *bestScore, struct node **bestRoot) {
     struct node *newRoot = (struct node *) calloc(1, sizeof(struct node));
     newRoot->name[0] = placeholderName;
+    
     newRoot->firstChild = (struct node *) calloc(1, sizeof(struct node));
     strcpy(newRoot->firstChild->name, thisNode->name);
     newRoot->firstChild->parent = newRoot;
+    newRoot->firstChild->distToParent = thisNode->distToParent / 2.0;
     traverse(newRoot->firstChild, thisNode, thisNode->parent);
     
     newRoot->firstChild->nextSibling = (struct node *) calloc(1, sizeof(struct node));
     strcpy(newRoot->firstChild->nextSibling->name, thisNode->parent->name);
     newRoot->firstChild->nextSibling->parent = newRoot;
+    newRoot->firstChild->nextSibling->distToParent = thisNode->distToParent / 2.0;
     traverse(newRoot->firstChild->nextSibling, thisNode->parent, thisNode);
     
     compNumberOfLeaves(newRoot);
@@ -135,7 +177,6 @@ static void score(struct node *thisNode, int index, char **names) {
         int index3 = index2;
         while (next != 0) {
             int index4 = index3 + next->numberOfLeaves;
-//            printf("check at %d %d\t%d\t%d\t%d\t%d\n", child->idNo, next->idNo, index1, index2, index3, index4);
             int score = check(index1, index2, index3, index4, names);
             if (score > 0) {
                 child->parent->tag = 1;
@@ -155,17 +196,6 @@ static int check(int index, int index2, int index3, int index4, char **names) {
     int overlap = 0;
     int aNotInB = 0;
     int bNotInA = 0;
-//    printf("A\t");
-//    for (int i = index; i < index2; i++) {
-//        printf("%s\t", names[i]);
-//    }
-//    printf("\n");
-//    printf("B\t");
-//    for (int i = index3; i < index4; i++) {
-//        printf("%s\t", names[i]);
-//    }
-//    printf("\n");
-//    printf("\n");
     
     for (int i = index; i < index2; i++) {
         int hit = 0;
@@ -206,7 +236,5 @@ static int check(int index, int index2, int index3, int index4, char **names) {
     } else if (overlap > 0) {
         score = 3;
     }
-//    printf("score\t%d\n", score);
-//    printf("\n");
     return score;
 }

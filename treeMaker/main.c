@@ -5,6 +5,9 @@
 #include <getopt.h>
 #include <errno.h>
 #include "methods.h"
+#include "parse.h"
+#include "tree.h"
+#include "node.h"
 
 int main(int argc, char **argv) {
     char *input;
@@ -109,6 +112,15 @@ int main(int argc, char **argv) {
         }
     }
     
-    makeTree(input, mini, ustar, norm, weight, average, median, mostCommon, cluster, root, astralTag, notCountTag, branchLength);
+    for (int i = 0; i < 1; i++) {
+        struct node *finalTree = 0;
+        makeTree(&finalTree, input, mini, ustar, norm, weight, average, median, mostCommon, cluster, root, astralTag, notCountTag, branchLength);
+        saveTree(finalTree, output);
+        freeTree(finalTree);
+        if (i % 100 == 0) {
+            printf("%d\n", i);
+        }
+    }
+    
     
 }

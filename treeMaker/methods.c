@@ -10,7 +10,7 @@
 
 const int arrayExtends = 64;
 
-void makeTree(const char *input, char mini, char ustar, char norm, char weight, char average, char median, char mostCommon, char cluster, char root, char astralTag, char notCountTag, char branchLength);
+void makeTree(struct node **finalTree, const char *input, char mini, char ustar, char norm, char weight, char average, char median, char mostCommon, char cluster, char root, char astralTag, char notCountTag, char branchLength);
 int compare_dbl (const void *a, const void *b);
 
 int compare_dbl (const void *a, const void *b) {
@@ -25,13 +25,14 @@ int compare_dbl (const void *a, const void *b) {
 
 
 
-void makeTree(const char *input, char mini, char ustar, char norm, char weight, char average, char median, char mostCommon, char cluster, char toRoot, char astralTag, char notCountTag, char branchLength) {
+void makeTree(struct node **finalTree, const char *input, char mini, char ustar, char norm, char weight, char average, char median, char mostCommon, char cluster, char toRoot, char astralTag, char notCountTag, char branchLength) {
     
     int numberOfTrees = 0;
     struct node **trees = 0;
     
     int numberOfSpecies = 0;
     char **speciesNames = 0;
+    
 
     readFileToTrees(&trees, input, &numberOfTrees, &speciesNames, &numberOfSpecies);
     
@@ -53,9 +54,14 @@ void makeTree(const char *input, char mini, char ustar, char norm, char weight, 
         
         // TODO: MADRoot
         
-        if (toRoot == 1) {
-            astralRoot(&(trees[treeNumber]));
-        }
+//        if (treeNumber < 1) {
+            if (toRoot == 1) {
+                astralRoot(&(trees[treeNumber]));
+            } else if (toRoot == 2) {
+                mad(&(trees[treeNumber]));
+            }
+//        }
+        
         
 
         int treeSize = trees[treeNumber]->numberOfLeaves;
@@ -279,7 +285,7 @@ void makeTree(const char *input, char mini, char ustar, char norm, char weight, 
     }
     
     struct node *root = (struct node *) calloc(1, sizeof(struct node));
-    
+
     if (cluster == 0) {
         //NJ
         NJ(&root, speciesNames, finalDistance, numberOfSpecies);
@@ -290,22 +296,25 @@ void makeTree(const char *input, char mini, char ustar, char norm, char weight, 
         //WPGMA
         UWPGMA(&root, speciesNames, finalDistance, numberOfSpecies, 1);
     }
-    printTree(root, 4);
-    
-    
-    printf("\t");
-    for (int i = 0; i < numberOfSpecies; i++) {
-        printf("%s\t", speciesNames[i]);
-    }
-    printf("\n");
-    for (int i = 0; i < numberOfSpecies; i++) {
-        printf("%s\t", speciesNames[i]);
-        for (int j = 0; j < numberOfSpecies; j++) {
-            printf("%.3f\t", finalDistance[i][j]);
-        }
-        printf("\n");
-    }
-    printf("\n");
+
+//    printTree(root, 4);
+    (*finalTree) = root;
+
+//    
+//    
+//    printf("\t");
+//    for (int i = 0; i < numberOfSpecies; i++) {
+//        printf("%s\t", speciesNames[i]);
+//    }
+//    printf("\n");
+//    for (int i = 0; i < numberOfSpecies; i++) {
+//        printf("%s\t", speciesNames[i]);
+//        for (int j = 0; j < numberOfSpecies; j++) {
+//            printf("%.3f\t", finalDistance[i][j]);
+//        }
+//        printf("\n");
+//    }
+//    printf("\n");
     for (int i = 0; i < numberOfSpecies; i++) {
         free(finalDistance[i]);
     }
@@ -315,8 +324,13 @@ void makeTree(const char *input, char mini, char ustar, char norm, char weight, 
     for (int i = 0; i < numberOfSpecies - 1; i++) {
         for (int j = 0; j < numberOfSpecies - 1 - i; j++) {
             free(distancesIndices[i][j]);
+            free(distances[i][j]);
         }
         free(distancesIndices[i]);
+        free(distances[i]);
+    }
+    if (distances != 0) {
+        free(distances);
     }
     if (distancesIndices != 0) {
         free(distancesIndices);

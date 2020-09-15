@@ -32,25 +32,21 @@ void NJ(struct node **root, char **names, double **dist, int size) {
         nodes[i]->numberOfLeaves = 1;
     }
     while (size > 2) {
-//        for (int i = 0; i < size; i++) {
-//            for (int j = 0; j < size; j++) {
-//                printf("%.3f\t", clusterDist[i][j]);
-//            }
-//            printf("\n");
-//        }
-//        printf("\n");
         double **q = (double **) calloc((size_t) size, sizeof(double *));
         for (int i = 0; i < size; i++) {
             q[i] = (double *) calloc((size_t) size, sizeof(double));
         }
+        
         calcQ(clusterDist, q, size);
         int i = 0;
         int j = 0;
         findMin(q, size, &i, &j);
+        
         double distI = 0.0;
         double distJ = 0.0;
         calcDistNJ(clusterDist, i, j, size, &distI, &distJ);
         updatedDistNJ(&clusterDist, i, j, size);
+        
         join(&nodes, size, i, j, distI, distJ);
         for (int i = 0; i < size; i++) {
             free(q[i]);
@@ -64,7 +60,13 @@ void NJ(struct node **root, char **names, double **dist, int size) {
             nodes[0]->firstChild->nextSibling->nextSibling = nodes[1];
         }
     }
+    for (int i = 0; i < 2; i++) {
+        free(clusterDist[i]);
+    }
+    free(clusterDist);
+    free(*root);
     (*root) = nodes[0];
+    free(nodes);
 }
 
 static void calcQ(double **dist, double **q, int size) {
@@ -95,7 +97,7 @@ static void calcDistNJ(double **dist, int i, int j, int size, double *distI, dou
 static void updatedDistNJ(double ***matrix, int joinI, int joinJ, int size) {
     double **newMatrix = (double **) calloc((size_t) size - 1, sizeof(double *));
     for (int i = 0; i < size - 1; i++) {
-        newMatrix[i] = (double *) calloc((size_t) size - 1, sizeof(double *));
+        newMatrix[i] = (double *) calloc((size_t) size - 1, sizeof(double));
     }
     for (int i = 0; i < size - 1; i++) {
         for (int j = 0; j < size - 1; j++) {
@@ -160,7 +162,11 @@ void UWPGMA(struct node **root, char **names, double **dist, int size, char wpgm
         size--;
         compNumberOfLeaves(nodes[0]);
     }
+    free(clusterDist[0]);
+    free(clusterDist);
+    free(*root);
     (*root) = nodes[0];
+    free(nodes);
 }
 
 static void updatedDistWPGMA(double ***matrix, int joinI, int joinJ, int size) {
@@ -246,7 +252,7 @@ static void findMin(double **matrix, int size, int *i, int *j) {
     if (size > 0) {
         double min = DBL_MAX;
         for (int row = 0; row < size; row++) {
-            for (int col = 0; col < size; col++) {
+            for (int col = row; col < size; col++) {
                 if (row != col && matrix[row][col] < min) {
                     min = matrix[row][col];
                     *i = row;
@@ -259,7 +265,7 @@ static void findMin(double **matrix, int size, int *i, int *j) {
 
 static void join(struct node ***nodes, int size, int i, int j, double distI, double distJ) {
     struct node **newNodes = (struct node **) calloc((size_t) size - 1, sizeof(struct node *));
-    newNodes[0] = (struct node *) calloc(1, sizeof(struct node));
+    newNodes[0] = (struct node *) calloc((size_t) 1, sizeof(struct node));
     newNodes[0]->name[0] = placeholderName;
     newNodes[0]->firstChild = (*nodes)[i];
     (*nodes)[i]->distToParent = distI;

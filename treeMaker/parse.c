@@ -5,7 +5,8 @@
 #include "node.h"
 #include <errno.h>
 
-const int lineWidthIntervall = 50;
+const int lineWidthIntervall = 1024;
+const int readChars = 128;
 const char endOfTree = ';';
 
 void readFileToTrees(struct node ***trees, const char *filename, int *numberOfTrees, char ***allLeafNames, int *numberOfLeafNames);
@@ -28,16 +29,18 @@ void readFileToTrees(struct node ***trees, const char *filename, int *numberOfTr
     char **newickTree;
     readFileToArray(filename, &newickTree, numberOfTrees);
     
+    free(newickTree[*numberOfTrees]);
     if (errno != 0) {
         return;
     }
     
     // array of chars to trees
-    *trees = (struct node **) calloc(sizeof(struct node *), *numberOfTrees);
+    *trees = (struct node **) calloc((size_t) *numberOfTrees, sizeof(struct node *));
     for (int i = 0; i < *numberOfTrees; i++) {
         // parse newick format to tree, add leaf names to allLeafNamesArray
         newickTreeToTree(newickTree[i], &((*trees)[i]), allLeafNames, numberOfLeafNames);
         free(newickTree[i]);
+        
     }
     free(newickTree);
 }
@@ -49,7 +52,8 @@ void readFileToArray(const char *filename, char ***newickTree, int *numberOfTree
         return;
     }
     
-    char c;
+    
+    char c[readChars];
     *numberOfTrees = 0;
     int indexTree = 0;
     int posInLine = 0;
@@ -57,29 +61,57 @@ void readFileToArray(const char *filename, char ***newickTree, int *numberOfTree
     // Set char array for first tree;
     *newickTree = (char **) calloc(sizeof(char *), 1);
     // Read whole file
-    while (fread(&c, sizeof(c), 1, f) == 1) {
-        
-        // Ignore newline char
-        if (c == '\n') {
-            continue;
-        }
-
-        if (c != endOfTree) {
-            if (posInLine % lineWidthIntervall == 0) {
-                int fromSize = posInLine;
-                int toSize = fromSize + lineWidthIntervall;
-                extenCharSize(&((*newickTree)[indexTree]), fromSize, toSize);
+    int read = 0;
+    
+    do {
+        read = fread(&c, sizeof(char), readChars, f);
+        for (int i = 0; i < read; i++) {
+            // Ignore newline char
+            if (c[i] == '\n') {
+                continue;
             }
-            
-            // Add char to array
-            (*newickTree)[indexTree][posInLine] = c;
-            posInLine++;
-        } else {
-            indexTree++;
-            extendCharArraybyTree(newickTree, indexTree + 1);
-            posInLine = 0;
+
+            if (c[i] != endOfTree) {
+                if (posInLine % lineWidthIntervall == 0) {
+                    int fromSize = posInLine;
+                    int toSize = fromSize + lineWidthIntervall;
+                    extenCharSize(&((*newickTree)[indexTree]), fromSize, toSize);
+                }
+                
+                // Add char to array
+                (*newickTree)[indexTree][posInLine] = c[i];
+                posInLine++;
+            } else {
+                indexTree++;
+                extendCharArraybyTree(newickTree, indexTree + 1);
+                posInLine = 0;
+            }
         }
-    }
+    } while (read == readChars);
+    
+//    while (fread(&c, sizeof(char), readChars, f) > 0) {
+//
+//        // Ignore newline char
+//        if (c == '\n') {
+//            continue;
+//        }
+//
+//        if (c != endOfTree) {
+//            if (posInLine % lineWidthIntervall == 0) {
+//                int fromSize = posInLine;
+//                int toSize = fromSize + lineWidthIntervall;
+//                extenCharSize(&((*newickTree)[indexTree]), fromSize, toSize);
+//            }
+//
+//            // Add char to array
+//            (*newickTree)[indexTree][posInLine] = c;
+//            posInLine++;
+//        } else {
+//            indexTree++;
+//            extendCharArraybyTree(newickTree, indexTree + 1);
+//            posInLine = 0;
+//        }
+//    }
     *numberOfTrees = indexTree;
     fclose(f);
 }
@@ -95,7 +127,7 @@ static void extenCharSize(char **oldChar, int fromSize, int toSize) {
 }
 
 static void extendCharArraybyTree(char ***newickTree, int newNumberOfTrees) {
-    char **newArray = (char **) calloc(sizeof(char *), newNumberOfTrees);
+    char **newArray = (char **) calloc((size_t) newNumberOfTrees, sizeof(char *));
     for (int i = 0; i < newNumberOfTrees - 1; i++) {
         newArray[i] = (*newickTree)[i];
     }
@@ -114,7 +146,7 @@ void newickTreeToTree(char *newickTree, struct node **tree, char ***allLeafNames
     int id = 0;
     current->idNo = id;
     id++;
-    char *value = calloc(sizeof(char), maxValueLength);
+    char *value = (char *) calloc((size_t) maxValueLength +1 , sizeof(char));
     
     // Only add names of leaves
     int dontAddNextName = 0;
@@ -169,7 +201,6 @@ void newickTreeToTree(char *newickTree, struct node **tree, char ***allLeafNames
     }
     free(value);
     compNumberOfLeaves(*tree);
-    
 }
 
 static int isTreeOperator(char c) {
@@ -188,13 +219,13 @@ static void addName(char *name, char ***allNames, int *currentLength) {
         }
     }
     if (!exists) {
-        char **new = (char **) calloc(sizeof(char*), *currentLength + 1);
+        char **new = (char **) calloc((size_t) (*currentLength + 1), sizeof(char *));
         for (int i = 0; i < *currentLength; i++) {
             new[i] = (*allNames)[i];
         }
-        new[*currentLength] = (char*) calloc(sizeof(char), strlen(name) + 1);
+        new[*currentLength] = (char *) calloc((size_t) strlen(name) + 1, sizeof(char));
         strcpy(new[*currentLength], name);
-        if (*currentLength > 1) {
+        if (*currentLength > 0) {
             free(*allNames);
         }
         *allNames = new;
