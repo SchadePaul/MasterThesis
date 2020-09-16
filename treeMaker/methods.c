@@ -248,8 +248,8 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
                 while (newArray[k] <= 0) {
                     k++;
                 }
-                finalDistance[i][j + 1 + i] = newArray[(int) (k + ((distancesIndices[i][j][numberOfTrees] - k) / 2))];
-                finalDistance[j + 1 + i][i] = newArray[(int) (k + ((distancesIndices[i][j][numberOfTrees] - k) / 2))];
+                finalDistance[i][j + 1 + i] = newArray[(int) (k + (((distancesIndices[i][j][numberOfTrees] / 2) - k) / 2))];
+                finalDistance[j + 1 + i][i] = newArray[(int) (k + (((distancesIndices[i][j][numberOfTrees] / 2) - k) / 2))];
             }
         }
     } else if (mostCommon != 0) {
