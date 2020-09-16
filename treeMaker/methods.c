@@ -134,38 +134,8 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
                 
                 if (mini == 1) {
                     int index = distancesIndices[ii][jj][treeNumber];
-                    if ((distancesIndices[ii][jj][treeNumber + 1] > index) && (treeDistances[i][j] / normFactor < distancesIndices[ii][jj][index])) {
-                        for (int repeat = 0; repeat < weightFactor; repeat++) {
-                            if (index != 0 && (index % arrayExtends == 0)) {
-                                double *newArray = (double *) calloc(sizeof(double), (index/arrayExtends + 1) * arrayExtends);
-                                for (int copyI = 0; copyI < index; copyI++) {
-                                    newArray[copyI] = distances[ii][jj][copyI];
-                                }
-                                free(distances[ii][jj]);
-                                distances[ii][jj] = newArray;
-                            }
-                            distances[ii][jj][index] = treeDistances[i][j] / normFactor;
-                            index++;
-                        }
-                    } else if (distancesIndices[ii][jj][treeNumber + 1] == index) {
-                        for (int repeat = 0; repeat < weightFactor; repeat++) {
-                            int index = distancesIndices[ii][jj][treeNumber + 1];
-                            distancesIndices[ii][jj][treeNumber + 1] += 1;
-                            if (index != 0 && (index % arrayExtends == 0)) {
-                                double *newArray = (double *) calloc(sizeof(double), (index/arrayExtends + 1) * arrayExtends);
-                                for (int copyI = 0; copyI < index; copyI++) {
-                                    newArray[copyI] = distances[ii][jj][copyI];
-                                }
-                                free(distances[ii][jj]);
-                                distances[ii][jj] = newArray;
-                            }
-                            distances[ii][jj][index] = treeDistances[i][j] / normFactor;
-                        }
-                    }
-                } else {
-                    for (int repeat = 0; repeat < weightFactor; repeat++) {
-                        int index = distancesIndices[ii][jj][treeNumber + 1];
-                        distancesIndices[ii][jj][treeNumber + 1] += 1;
+                    if ((distancesIndices[ii][jj][treeNumber + 1] > index) && (weightFactor * treeDistances[i][j] / normFactor < distancesIndices[ii][jj][index])) {
+//                        for (int repeat = 0; repeat < weightFactor; repeat++) {
                         if (index != 0 && (index % arrayExtends == 0)) {
                             double *newArray = (double *) calloc(sizeof(double), (index/arrayExtends + 1) * arrayExtends);
                             for (int copyI = 0; copyI < index; copyI++) {
@@ -174,8 +144,67 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
                             free(distances[ii][jj]);
                             distances[ii][jj] = newArray;
                         }
-                        distances[ii][jj][index] = treeDistances[i][j] / normFactor;
+                        distances[ii][jj][index] = weightFactor * treeDistances[i][j] / normFactor;
+                        index += 1;
+                        if (index != 0 && (index % arrayExtends == 0)) {
+                            double *newArray = (double *) calloc(sizeof(double), (index/arrayExtends + 1) * arrayExtends);
+                            for (int copyI = 0; copyI < index; copyI++) {
+                                newArray[copyI] = distances[ii][jj][copyI];
+                            }
+                            free(distances[ii][jj]);
+                            distances[ii][jj] = newArray;
+                        }
+                        distances[ii][jj][index] = weightFactor;
+//                        }
+                    } else if (distancesIndices[ii][jj][treeNumber + 1] == index) {
+//                        for (int repeat = 0; repeat < weightFactor; repeat++) {
+                        int index = distancesIndices[ii][jj][treeNumber + 1];
+                        distancesIndices[ii][jj][treeNumber + 1] += 2;
+                        if (index != 0 && (index % arrayExtends == 0)) {
+                            double *newArray = (double *) calloc(sizeof(double), (index/arrayExtends + 1) * arrayExtends);
+                            for (int copyI = 0; copyI < index; copyI++) {
+                                newArray[copyI] = distances[ii][jj][copyI];
+                            }
+                            free(distances[ii][jj]);
+                            distances[ii][jj] = newArray;
+                        }
+                        distances[ii][jj][index] = weightFactor * treeDistances[i][j] / normFactor;
+                        index += 1;
+                        if (index != 0 && (index % arrayExtends == 0)) {
+                            double *newArray = (double *) calloc(sizeof(double), (index/arrayExtends + 1) * arrayExtends);
+                            for (int copyI = 0; copyI < index; copyI++) {
+                                newArray[copyI] = distances[ii][jj][copyI];
+                            }
+                            free(distances[ii][jj]);
+                            distances[ii][jj] = newArray;
+                        }
+                        distances[ii][jj][index] = weightFactor;
+//                        }
                     }
+                } else {
+//                    for (int repeat = 0; repeat < weightFactor; repeat++) {
+                    int index = distancesIndices[ii][jj][treeNumber + 1];
+                    distancesIndices[ii][jj][treeNumber + 1] += 2;
+                    if (index != 0 && (index % arrayExtends == 0)) {
+                        double *newArray = (double *) calloc(sizeof(double), (index/arrayExtends + 1) * arrayExtends);
+                        for (int copyI = 0; copyI < index; copyI++) {
+                            newArray[copyI] = distances[ii][jj][copyI];
+                        }
+                        free(distances[ii][jj]);
+                        distances[ii][jj] = newArray;
+                    }
+                    distances[ii][jj][index] = weightFactor * treeDistances[i][j] / normFactor;
+                    index += 1;
+                    if (index != 0 && (index % arrayExtends == 0)) {
+                        double *newArray = (double *) calloc(sizeof(double), (index/arrayExtends + 1) * arrayExtends);
+                        for (int copyI = 0; copyI < index; copyI++) {
+                            newArray[copyI] = distances[ii][jj][copyI];
+                        }
+                        free(distances[ii][jj]);
+                        distances[ii][jj] = newArray;
+                    }
+                    distances[ii][jj][index + 1] = weightFactor;
+//                    }
                 }
             }
         }
@@ -204,6 +233,8 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
     }
     
     if (median != 0) {
+        printf("median and weighting not compatible\n");
+        // changed from adding multiple time to add only once with weight because much faster
         for (int i = 0; i < numberOfSpecies - 1; i++) {
             for (int j = 0; j < numberOfSpecies - 1 - i; j++) {
                 qsort(distances[i][j], (size_t) distancesIndices[i][j][numberOfTrees], sizeof(double), compare_dbl);
@@ -216,6 +247,8 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
             }
         }
     } else if (mostCommon != 0) {
+        printf("median and mostCommon not compatible\n");
+        // changed from adding multiple time to add only once with weight because much faster
         for (int i = 0; i < numberOfSpecies - 1; i++) {
             for (int j = 0; j < numberOfSpecies - 1 - i; j++) {
                 int max = 0;
@@ -254,17 +287,17 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
                 double thisDist = 0.0;
                 double numberOfDist = 0.0;
                 if (ustar == 0) {
-                    for (int k = 0; k < distancesIndices[i][j][numberOfTrees]; k++) {
+                    for (int k = 0; k < distancesIndices[i][j][numberOfTrees]; k += 2) {
                         thisDist += distances[i][j][k];
-                        numberOfDist += 1.0;
+                        numberOfDist += distances[i][j][k];
                     }
                 } else if (ustar != 0) {
                     for (int k = 0; k < numberOfTrees; k++) {
                         double thisTreeDist = 0.0;
                         double numberOfTreeDist = 0.0;
-                        for (int l = distancesIndices[i][j][k]; l < distancesIndices[i][j][k + 1]; l++) {
+                        for (int l = distancesIndices[i][j][k]; l < distancesIndices[i][j][k + 1]; l += 2) {
                             thisTreeDist += distances[i][j][l];
-                            numberOfTreeDist += 1.0;
+                            numberOfTreeDist += distances[i][j][l + 1];
                         }
                         if (numberOfTreeDist > 0) {
                             thisDist += thisTreeDist / numberOfTreeDist;
