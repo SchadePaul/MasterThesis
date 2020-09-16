@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
         saveTree(finalTree, output);
         freeTree(finalTree);
         if (i % 100 == 0) {
-            printf("%d\n", i);
+//            printf("%d\n", i);
         }
     }
     

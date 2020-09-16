@@ -52,18 +52,11 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
     
     for (int treeNumber = 0; treeNumber < numberOfTrees; treeNumber++) {
         
-        // TODO: MADRoot
-        
-        if (treeNumber < 1) {
-            if (toRoot == 1) {
-                astralRoot(&(trees[treeNumber]));
-            } else if (toRoot == 2) {
-                printTree((trees[treeNumber]), 5);
-                mad(&(trees[treeNumber]));
-            }
+        if (toRoot == 1) {
+            astralRoot(&(trees[treeNumber]));
+        } else if (toRoot == 2) {
+            mad(&(trees[treeNumber]));
         }
-        
-        
 
         int treeSize = trees[treeNumber]->numberOfLeaves;
         
@@ -298,24 +291,22 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
         UWPGMA(&root, speciesNames, finalDistance, numberOfSpecies, 1);
     }
 
-//    printTree(root, 4);
-    (*finalTree) = root;
-
-//    
-//    
-//    printf("\t");
-//    for (int i = 0; i < numberOfSpecies; i++) {
-//        printf("%s\t", speciesNames[i]);
-//    }
-//    printf("\n");
-//    for (int i = 0; i < numberOfSpecies; i++) {
-//        printf("%s\t", speciesNames[i]);
-//        for (int j = 0; j < numberOfSpecies; j++) {
-//            printf("%.3f\t", finalDistance[i][j]);
-//        }
-//        printf("\n");
-//    }
-//    printf("\n");
+    printTree(root, 4);
+    (*finalTree) = root;    
+    
+    printf("\t");
+    for (int i = 0; i < numberOfSpecies; i++) {
+        printf("%s\t", speciesNames[i]);
+    }
+    printf("\n");
+    for (int i = 0; i < numberOfSpecies; i++) {
+        printf("%s\t", speciesNames[i]);
+        for (int j = 0; j < numberOfSpecies; j++) {
+            printf("%.3f\t", finalDistance[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
     for (int i = 0; i < numberOfSpecies; i++) {
         free(finalDistance[i]);
     }
