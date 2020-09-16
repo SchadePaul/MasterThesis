@@ -203,7 +203,7 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
                         free(distances[ii][jj]);
                         distances[ii][jj] = newArray;
                     }
-                    distances[ii][jj][index + 1] = weightFactor;
+                    distances[ii][jj][index] = weightFactor;
 //                    }
                 }
             }
@@ -233,7 +233,9 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
     }
     
     if (median != 0) {
-        printf("median and weighting not compatible\n");
+        if (weight != 0) {
+            printf("median and weighting not compatible\n");
+        }
         // changed from adding multiple time to add only once with weight because much faster
         for (int i = 0; i < numberOfSpecies - 1; i++) {
             for (int j = 0; j < numberOfSpecies - 1 - i; j++) {
@@ -247,7 +249,9 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
             }
         }
     } else if (mostCommon != 0) {
-        printf("median and mostCommon not compatible\n");
+        if (weight != 0) {
+            printf("weighting and mostCommon not compatible\n");
+        }
         // changed from adding multiple time to add only once with weight because much faster
         for (int i = 0; i < numberOfSpecies - 1; i++) {
             for (int j = 0; j < numberOfSpecies - 1 - i; j++) {
