@@ -54,13 +54,14 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
         
         // TODO: MADRoot
         
-//        if (treeNumber < 1) {
+        if (treeNumber < 1) {
             if (toRoot == 1) {
                 astralRoot(&(trees[treeNumber]));
             } else if (toRoot == 2) {
+                printTree((trees[treeNumber]), 5);
                 mad(&(trees[treeNumber]));
             }
-//        }
+        }
         
         
 

@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <float.h>
+#include <math.h>
 #include "node.h"
 #include "tree.h"
 #include "parse.h"
@@ -13,9 +15,13 @@ void astralRoot(struct node **root);
 static void reRoot(struct node *thisNode, int *bestScore, struct node **bestRoot);
 static void traverse(struct node *newTree, struct node *oldTree, struct node *avoid);
 void mad(struct node **root);
-static void nodeToNodeDist(struct node *current, double **dist, int index, int size);
+static void nodeToNodeDist(struct node *current, double **dist, int index, int size, int *leaveIndex, int *leaveToId);
+static void relDev(struct node *current, double **relDeviation, double **dist, int index, int *leaveIndices, int leaveIndex);
+static void calcRho(double **dist, int from, int to, int indexJ, int size, double *rho, int *leafIndices);
+static void calcScore(double **nodeDist, double **relDev, int from, int to, double disIJ, int size, double *rho, double *score, int *bestId, int *leafIndices, int indexNode);
+static void reRoot_MAD(struct node **root, int bestId, double rho);
 
-static void nodeToNodeDist(struct node *current, double **dist, int index, int size) {
+static void nodeToNodeDist(struct node *current, double **dist, int index, int size, int *leaveIndex, int *leaveToId) {
     if (current->numberOfChildren != 0) {
         struct node *child = current->firstChild;
         index++;
@@ -30,26 +36,246 @@ static void nodeToNodeDist(struct node *current, double **dist, int index, int s
                     dist[i][j - 1 - i] += child->distToParent;
                 }
             }
-            nodeToNodeDist(child, dist, index, size);
+            nodeToNodeDist(child, dist, index, size, leaveIndex, leaveToId);
             index += child->numberOfNodes;
             child = child->nextSibling;
+        }
+    } else {
+        leaveToId[*leaveIndex] = index;
+        *leaveIndex += 1;
+    }
+}
+
+static void relDev(struct node *current, double **relDeviation, double **dist, int index, int *leafIndices, int leafIndex) {
+    if (current->numberOfChildren != 0) {
+        struct node *child = current->firstChild;
+        int childIndex = index + 1;
+        while (child != 0) {
+            struct node *next = child->nextSibling;
+            int nextIndex = leafIndex + child->numberOfLeaves;
+            while (next != 0) {
+                for (int i = leafIndex; i < leafIndex + child->numberOfLeaves; i++) {
+                    for (int j = nextIndex; j < nextIndex + next->numberOfLeaves; j++) {
+                        relDeviation[i][j - 1 - i] = fabs(((2.0 * dist[index][leafIndices[i] - 1 - index]) / dist[leafIndices[i]][leafIndices[j] - 1 - leafIndices[i]]) - 1.0);
+//                        printf("relDev for:\t%d\t%d\t%d\t\t%.5f\t%.5f\t%.5f\n", index, leafIndices[i], leafIndices[j], dist[index][leafIndices[i] - 1 - index], dist[leafIndices[i]][leafIndices[j] - 1 - leafIndices[i]], relDeviation[i][j - 1 - i]);
+//                        printf("%d\t%d\t%f\n", i, j, fabs(((2.0 * dist[index][leafIndices[i] - 1 - index]) / dist[leafIndices[i]][leafIndices[j] - 1 - leafIndices[i]]) - 1.0));
+                    }
+                }
+                nextIndex += next->numberOfLeaves;
+                next = next->nextSibling;
+            }
+            relDev(child, relDeviation, dist, childIndex, leafIndices, leafIndex);
+            childIndex += child->numberOfNodes;
+            leafIndex += child->numberOfLeaves;
+            child = child->nextSibling;
+            
         }
     }
 }
 
+static void calcRho(double **dist, int from, int to, int indexJ, int size, double *rho, int *leafIndices) {
+    // from == i and is child node of j
+    double divider = 0.0;
+    *rho = 0.0;
+    
+    for (int i = from; i < to; i++) {
+        for (int j = 0; j < from; j++) {
+            divider += pow(dist[leafIndices[j]][leafIndices[i] - 1 - leafIndices[j]], -2.0);
+        }
+        for (int j = to; j < size; j++) {
+            divider += pow(dist[leafIndices[i]][leafIndices[j] - 1 - leafIndices[i]], -2.0);
+        }
+    }
+    divider *= 2.0 * dist[indexJ][leafIndices[from] - 1 - indexJ];
+    divider = 1.0 / divider;
+    
+    for (int i = 0; i < from; i++) {
+        for (int j = from; j < to; j++) {
+            double thisDist = (j > from) ? dist[from][j - 1 - from] : 0.0;
+            *rho += ((dist[leafIndices[i]][leafIndices[j] - 1 - leafIndices[i]] - 2.0 * thisDist) * pow(dist[leafIndices[i]][leafIndices[j] - 1 - leafIndices[i]], -2.0) * divider);
+        }
+    }
+    for (int i = from; i < to; i++) {
+        double thisDist = (i > from) ? dist[from][i - 1 - from] : 0.0;
+        for (int j = to; j < size; j++) {
+            *rho += ((dist[leafIndices[i]][leafIndices[j] - 1 - leafIndices[i]] - 2.0 * thisDist) * pow(dist[leafIndices[i]][leafIndices[j] - 1 - leafIndices[i]], -2.0) * divider);
+        }
+    }
+    
+    if (*rho < 0.0) {
+        *rho = 0.0;
+    } else if (*rho > 1.0) {
+        *rho = 1.0;
+    }
+}
+
+static void calcScore(double **nodeDist, double **relDev, int from, int to, double disIJ, int size, double *rho, double *score, int *bestId, int *leafIndices, int indexNode) {
+    double thisRho = 0.0;
+    calcRho(nodeDist, from, to, 0, size, &thisRho, leafIndices);
+//    printf("%d:%d:\trho: %f\t\t", from, to, thisRho);
+    double thisScore = 0.0;
+    
+    for (int i = 0; i < from; i++) {
+        for (int j = i + 1; j < from; j++) {
+            thisScore += pow(relDev[i][j - 1 - i], 2.0);
+        }
+        for (int j = to; j < size; j++) {
+            thisScore += pow(relDev[i][j - 1 - i], 2.0);
+        }
+    }
+    for (int i = from; i < to; i++) {
+        for (int j = i + 1; j < to; j++) {
+            thisScore += pow(relDev[i][j - 1 - i], 2.0);
+        }
+    }
+    for (int i = to; i < size; i++) {
+        for (int j = i + 1; j < size; j++) {
+            thisScore += pow(relDev[i][j - 1 - i], 2.0);
+        }
+    }
+    
+//    printf("score: ext: %f\t\t", thisScore);
+    double disIRho = thisRho * disIJ;
+    for (int i = from; i < to; i++) {
+        double thisDis = (leafIndices[i] > indexNode) ? nodeDist[indexNode][leafIndices[i] - 1 - indexNode] : 0.0;
+        thisDis += disIRho;
+        thisDis *= 2;
+        for (int j = 0; j < from; j++) {
+            thisScore += pow((thisDis / nodeDist[leafIndices[j]][leafIndices[i] - 1 - leafIndices[j]]) - 1.0, 2.0);
+        }
+        for (int j = to; j < size; j++) {
+            thisScore += pow((thisDis / nodeDist[leafIndices[i]][leafIndices[j] - 1 - leafIndices[i]]) - 1.0, 2.0);
+        }
+    }
+    if (thisScore < *score) {
+        *score = thisScore;
+        *bestId = indexNode;
+        *rho = thisRho;
+    }
+//    printf("%f\n", thisScore);
+    
+}
+
+static void reRoot_MAD(struct node **root, int bestId, double rho) {
+    struct node *current = (*root);
+    int id = 0;
+    while (1 == 1) {
+        while (current->firstChild != 0) {
+            current = current->firstChild;
+            id += 1;
+            if (id == bestId) {
+                break;
+            }
+        }
+        if (id == bestId) {
+            break;
+        }
+        while (current->nextSibling == 0) {
+            current = current->parent;
+        }
+        current = current->nextSibling;
+        id += 1;
+        if (id == bestId) {
+            break;
+        }
+    }
+    
+    struct node *newRoot = (struct node *) calloc(1, sizeof(struct node));
+    newRoot->name[0] = placeholderName;
+    
+    newRoot->firstChild = (struct node *) calloc(1, sizeof(struct node));
+    strcpy(newRoot->firstChild->name, current->name);
+    newRoot->firstChild->parent = newRoot;
+    newRoot->firstChild->distToParent = current->distToParent * rho;
+    traverse(newRoot->firstChild, current, current->parent);
+    
+    newRoot->firstChild->nextSibling = (struct node *) calloc(1, sizeof(struct node));
+    strcpy(newRoot->firstChild->nextSibling->name, current->parent->name);
+    newRoot->firstChild->nextSibling->parent = newRoot;
+    newRoot->firstChild->nextSibling->distToParent = current->distToParent * (1 - rho);
+    traverse(newRoot->firstChild->nextSibling, current->parent, current);
+    
+    compNumberOfLeaves(newRoot);
+    astralTag(newRoot);
+    
+    freeTree(*root);
+    (*root) = newRoot;
+    
+    
+}
+
 void mad(struct node **root) {
     int size = (*root)->numberOfNodes;
-    double **nodeToNodeDistances = (double **) calloc((size_t) (size - 1), sizeof(double));
+    int *leafIndices = (int *) calloc((size_t) (*root)->numberOfLeaves, sizeof(int));
+    int index = 0;
+    double **nodeToNodeDistances = (double **) calloc((size_t) (size - 1), sizeof(double *));
     for (int i = 0; i < size - 1; i++) {
         nodeToNodeDistances[i] = (double *) calloc((size_t) (size - 1 - i), sizeof(double));
     }
     
-    nodeToNodeDist((*root), nodeToNodeDistances, 0, size);
+    nodeToNodeDist((*root), nodeToNodeDistances, 0, size, &index, leafIndices);
+    
+    size = (*root)->numberOfLeaves;
+    
+    double **relDeviation = (double **) calloc((size_t) (size - 1), sizeof(double *));
+    for (int i = 0; i < size - 1; i++) {
+        relDeviation[i] = (double *) calloc((size_t) (size - 1 - i), sizeof(double));
+    }
+    
+    relDev((*root), relDeviation, nodeToNodeDistances, 0, leafIndices, 0);
+    
+//    for (int i = 0; i < size - 1; i++) {
+//        for (int j = 0; j < size - 1 - i; j++) {
+//            printf("%.3f  ", relDeviation[i][j]);
+//        }
+//        printf("\n");
+//    }
+//    printf("\n");
+    
+    double rho = 0.0;
+    double score = DBL_MAX;
+    int bestId = 0;
+
+    struct node *current = (*root);
+    int indexNode = 0;
+    int indexLeaf = 0;
+    while (1 == 1) {
+        while (current->firstChild != 0) {
+            current = current->firstChild;
+            indexNode += 1;
+            calcScore(nodeToNodeDistances, relDeviation, indexLeaf, indexLeaf + current->numberOfLeaves, current->distToParent, size, &rho, &score, &bestId, leafIndices, indexNode);
+        }
+        while (current->nextSibling == 0) {
+            current = current->parent;
+            if (current == (*root)) {
+                break;
+            }
+        }
+        if (current == (*root)) {
+            break;
+        }
+        indexLeaf += 1;
+        indexNode += 1;
+        current = current->nextSibling;
+        calcScore(nodeToNodeDistances, relDeviation, indexLeaf, indexLeaf + current->numberOfLeaves, current->distToParent, size, &rho, &score, &bestId, leafIndices, indexNode);
+    }
+    
+//    printf("WINNER:\n%d\n%f\n", bestId, score);
+    
+    reRoot_MAD(root, bestId, rho);
+    
+//    printTree((*root), 5);
     
     for (int i = 0; i < size - 1; i++) {
         free(nodeToNodeDistances[i]);
+        free(relDeviation[i]);
     }
-    free(nodeToNodeDistances);
+    if (relDeviation != 0) {
+        free(relDeviation);
+    }
+    if (nodeToNodeDistances != 0) {
+        free(nodeToNodeDistances);
+    }
 }
 
 void astralRoot(struct node **root) {
