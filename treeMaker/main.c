@@ -10,8 +10,8 @@
 #include "node.h"
 
 int main(int argc, char **argv) {
-    char *input;
-    char *output;
+    char *input = 0;
+    char *output = 0;
     
     char isRooted = 0;
     char hasPoly = 0;
@@ -24,13 +24,11 @@ int main(int argc, char **argv) {
     char ustar = 0;
     
     char branchLength = 0;
-    char onlySpec = 0;
-    char delDup = 0;
     
     char norm = 0;
     char weight = 0;
     
-    char average = 0;
+    char average = 1;
     char median = 0;
     char mostCommon = 0;
     
@@ -75,12 +73,6 @@ int main(int argc, char **argv) {
             case 'b':
                 branchLength = 1;
                 break;
-            case 's':
-                onlySpec = 1;
-                break;
-            case 'd':
-                delDup = 1;
-                break;
                 
             case 'n':
                 norm = atoi(optarg);
@@ -90,11 +82,13 @@ int main(int argc, char **argv) {
                 break;
                 
             case 'a':
-                if (atoi(optarg) == 1) {
+                if (atoi(optarg) == 0) {
                     average = 1;
-                } else if (atoi(optarg) == 2) {
+                } else if (atoi(optarg) == 1) {
+                    average = 0;
                     median = 1;
-                } else if (atoi(optarg) == 3) {
+                } else if (atoi(optarg) == 2) {
+                    mostCommon = 0;
                     mostCommon = 1;
                 }
                 break;
@@ -112,15 +106,12 @@ int main(int argc, char **argv) {
         }
     }
     
-    for (int i = 0; i < 1; i++) {
-        struct node *finalTree = 0;
+    struct node *finalTree = 0;
+    if (input != 0) {    
         makeTree(&finalTree, input, mini, ustar, norm, weight, average, median, mostCommon, cluster, root, astralTag, notCountTag, branchLength);
-        saveTree(finalTree, output);
-        freeTree(finalTree);
-        if (i % 100 == 0) {
-//            printf("%d\n", i);
+        if (output != 0) {
+            saveTree(finalTree, output);
+            freeTree(finalTree);
         }
-    }
-    
-    
+    } 
 }
