@@ -291,22 +291,22 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
         UWPGMA(&root, speciesNames, finalDistance, numberOfSpecies, 1);
     }
 
-    printTree(root, 4);
-    (*finalTree) = root;    
+//    printTree(root, 4);
+    (*finalTree) = root;
     
-    printf("\t");
-    for (int i = 0; i < numberOfSpecies; i++) {
-        printf("%s\t", speciesNames[i]);
-    }
-    printf("\n");
-    for (int i = 0; i < numberOfSpecies; i++) {
-        printf("%s\t", speciesNames[i]);
-        for (int j = 0; j < numberOfSpecies; j++) {
-            printf("%.3f\t", finalDistance[i][j]);
-        }
-        printf("\n");
-    }
-    printf("\n");
+//    printf("\t");
+//    for (int i = 0; i < numberOfSpecies; i++) {
+//        printf("%s\t", speciesNames[i]);
+//    }
+//    printf("\n");
+//    for (int i = 0; i < numberOfSpecies; i++) {
+//        printf("%s\t", speciesNames[i]);
+//        for (int j = 0; j < numberOfSpecies; j++) {
+//            printf("%.3f\t", finalDistance[i][j]);
+//        }
+//        printf("\n");
+//    }
+//    printf("\n");
     for (int i = 0; i < numberOfSpecies; i++) {
         free(finalDistance[i]);
     }
