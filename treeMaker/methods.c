@@ -112,7 +112,6 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
             }
         }
         
-        printf("\n NEW TREE\n\n");
         // copy treeDistances to distances
         for (int i = 0; i < treeSize - 1; i++) {
             for (int j = 0; j < treeSize - 1 - i; j++) {
