@@ -112,6 +112,7 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
             }
         }
         
+        printf("\n NEW TREE\n\n");
         // copy treeDistances to distances
         for (int i = 0; i < treeSize - 1; i++) {
             for (int j = 0; j < treeSize - 1 - i; j++) {
@@ -131,10 +132,9 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
                 }
                 
                 jj = jj - 1 - ii;
-                
                 if (mini == 1) {
                     int index = distancesIndices[ii][jj][treeNumber];
-                    if ((distancesIndices[ii][jj][treeNumber + 1] > index) && (weightFactor * treeDistances[i][j] / normFactor < distancesIndices[ii][jj][index])) {
+                    if ((distancesIndices[ii][jj][treeNumber + 1] > index) && (weightFactor * treeDistances[i][j] / normFactor < distances[ii][jj][index])) {
 //                        for (int repeat = 0; repeat < weightFactor; repeat++) {
                         if (index != 0 && (index % arrayExtends == 0)) {
                             double *newArray = (double *) calloc(sizeof(double), (index/arrayExtends + 1) * arrayExtends);
@@ -158,7 +158,7 @@ void makeTree(struct node **finalTree, const char *input, char mini, char ustar,
 //                        }
                     } else if (distancesIndices[ii][jj][treeNumber + 1] == index) {
 //                        for (int repeat = 0; repeat < weightFactor; repeat++) {
-                        int index = distancesIndices[ii][jj][treeNumber + 1];
+//                        int index = distancesIndices[ii][jj][treeNumber + 1];
                         distancesIndices[ii][jj][treeNumber + 1] += 2;
                         if (index != 0 && (index % arrayExtends == 0)) {
                             double *newArray = (double *) calloc(sizeof(double), (index/arrayExtends + 1) * arrayExtends);
